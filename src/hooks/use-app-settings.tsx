@@ -12,10 +12,6 @@ import type { AppSettings } from "@/types/stats";
 const SETTINGS_KEY = "quran-app-settings";
 
 const DEFAULT_SETTINGS: AppSettings = {
-  themeAccent: "emerald",
-  arabicFontSize: "lg",
-  translationFontSize: "sm",
-  arabicFont: "amiri",
   showVerseOfTheDay: true,
   showTransliteration: true,
   autoPlayAudio: false,
@@ -51,12 +47,6 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [settings]);
 
-  // Apply theme accent to CSS variables
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.accent = settings.themeAccent;
-  }, [settings.themeAccent]);
-
   const updateSetting = useCallback(
     <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
       setSettings((prev) => ({ ...prev, [key]: value }));
@@ -85,11 +75,3 @@ export function useAppSettings() {
   if (!ctx) throw new Error("useAppSettings must be used within AppSettingsProvider");
   return ctx;
 }
-
-export const ACCENT_COLORS = {
-  emerald: { name: "Hijau Zamrud", value: "160 84% 25%", class: "emerald" },
-  blue: { name: "Biru Langit", value: "210 90% 35%", class: "blue" },
-  purple: { name: "Ungu", value: "265 70% 40%", class: "purple" },
-  amber: { name: "Emas", value: "38 92% 45%", class: "amber" },
-  rose: { name: "Merah Rose", value: "340 75% 45%", class: "rose" },
-} as const;

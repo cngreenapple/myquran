@@ -13,23 +13,7 @@ interface VerseCardProps {
   showTafsir: boolean;
   highlighted?: boolean;
   showTransliteration?: boolean;
-  arabicFontSize?: "sm" | "base" | "lg" | "xl" | "2xl";
-  translationFontSize?: "sm" | "base" | "lg";
 }
-
-const arabicSizeMap = {
-  sm: "text-xl sm:text-2xl",
-  base: "text-2xl sm:text-[1.65rem]",
-  lg: "text-2xl sm:text-[1.75rem] md:text-3xl",
-  xl: "text-3xl sm:text-4xl",
-  "2xl": "text-4xl sm:text-5xl",
-} as const;
-
-const translationSizeMap = {
-  sm: "text-sm sm:text-base",
-  base: "text-base sm:text-lg",
-  lg: "text-lg sm:text-xl",
-} as const;
 
 export const VerseCard = memo(
   forwardRef<HTMLDivElement, VerseCardProps>(function VerseCard(
@@ -40,14 +24,10 @@ export const VerseCard = memo(
       showTafsir,
       highlighted,
       showTransliteration = true,
-      arabicFontSize = "lg",
-      translationFontSize = "sm",
     },
     ref,
   ) {
     const tafsirText = ayat.tafsir?.kemenag?.teks;
-    const arabicClass = arabicSizeMap[arabicFontSize];
-    const translationClass = translationSizeMap[translationFontSize];
 
     const handleShare = async () => {
       await shareVerseNative({
@@ -84,10 +64,7 @@ export const VerseCard = memo(
             <div className="flex-1 min-w-0 space-y-4">
               {/* Arabic */}
               <p
-                className={cn(
-                  "font-arabic text-right text-foreground leading-[2.4]",
-                  arabicClass,
-                )}
+                className="font-arabic text-right text-foreground leading-[2.4] text-2xl sm:text-[1.75rem] md:text-3xl"
                 dir="rtl"
                 lang="ar"
               >
@@ -102,12 +79,7 @@ export const VerseCard = memo(
               )}
 
               {/* Translation */}
-              <p
-                className={cn(
-                  "text-foreground/80 leading-relaxed",
-                  translationClass,
-                )}
-              >
+              <p className="text-sm sm:text-base text-foreground/80 leading-relaxed">
                 {ayat.teksIndonesia}
               </p>
 

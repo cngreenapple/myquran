@@ -6,10 +6,9 @@ import {
   Heart,
   BookOpen,
   RotateCcw,
-  Type,
-  Palette,
   Eye,
   Sparkles,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +18,7 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useTheme } from "@/hooks/use-theme";
 import { useLastRead } from "@/hooks/use-last-read";
 import { useReadingStats } from "@/hooks/use-reading-stats";
-import { useAppSettings, ACCENT_COLORS } from "@/hooks/use-app-settings";
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 import { showSuccess } from "@/utils/toast";
@@ -82,71 +81,8 @@ export default function Settings() {
             Tampilan
           </h2>
 
-          {/* Theme Accent */}
-          <Card className="border-border/60 mb-3">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4 mb-3">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-                  style={{
-                    backgroundColor: `hsl(${ACCENT_COLORS[settings.themeAccent].value} / 0.15)`,
-                  }}
-                  aria-hidden="true"
-                >
-                  <Palette
-                    className="w-5 h-5"
-                    style={{ color: `hsl(${ACCENT_COLORS[settings.themeAccent].value})` }}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">Warna Aksen</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {ACCENT_COLORS[settings.themeAccent].name}
-                  </p>
-                </div>
-              </div>
-              <div
-                className="grid grid-cols-5 gap-2"
-                role="radiogroup"
-                aria-label="Pilihan warna aksen"
-              >
-                {(Object.keys(ACCENT_COLORS) as Array<keyof typeof ACCENT_COLORS>).map(
-                  (key) => {
-                    const isActive = settings.themeAccent === key;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => updateSetting("themeAccent", key)}
-                        className={cn(
-                          "flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all",
-                          isActive
-                            ? "border-foreground bg-muted"
-                            : "border-transparent hover:border-border",
-                        )}
-                        role="radio"
-                        aria-checked={isActive}
-                        aria-label={ACCENT_COLORS[key].name}
-                      >
-                        <div
-                          className="w-8 h-8 rounded-full shadow-md"
-                          style={{
-                            backgroundColor: `hsl(${ACCENT_COLORS[key].value})`,
-                          }}
-                          aria-hidden="true"
-                        />
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          {ACCENT_COLORS[key].name.split(" ")[0]}
-                        </span>
-                      </button>
-                    );
-                  },
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Dark Mode */}
-          <Card className="border-border/60 mb-3">
+          <Card className="border-border/60">
             <CardContent className="p-5">
               <div className="flex items-center gap-4">
                 <div
@@ -201,84 +137,6 @@ export default function Settings() {
                   <Moon className="w-4 h-4" aria-hidden="true" />
                   Gelap
                 </button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Font Settings */}
-          <Card className="border-border/60">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4 mb-3">
-                <div
-                  className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0"
-                  aria-hidden="true"
-                >
-                  <Type className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground">Ukuran Font</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Sesuaikan ukuran teks Arab & terjemahan
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                    Teks Arab
-                  </p>
-                  <div
-                    className="grid grid-cols-5 gap-1.5"
-                    role="radiogroup"
-                    aria-label="Ukuran font Arab"
-                  >
-                    {(["sm", "base", "lg", "xl", "2xl"] as const).map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => updateSetting("arabicFontSize", size)}
-                        className={cn(
-                          "py-2 rounded-lg text-xs font-bold uppercase transition-all border-2",
-                          settings.arabicFontSize === size
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/40 text-muted-foreground",
-                        )}
-                        role="radio"
-                        aria-checked={settings.arabicFontSize === size}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-border/40">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                    Terjemahan
-                  </p>
-                  <div
-                    className="grid grid-cols-3 gap-1.5"
-                    role="radiogroup"
-                    aria-label="Ukuran font terjemahan"
-                  >
-                    {(["sm", "base", "lg"] as const).map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => updateSetting("translationFontSize", size)}
-                        className={cn(
-                          "py-2 rounded-lg text-xs font-bold uppercase transition-all border-2",
-                          settings.translationFontSize === size
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/40 text-muted-foreground",
-                        )}
-                        role="radio"
-                        aria-checked={settings.translationFontSize === size}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

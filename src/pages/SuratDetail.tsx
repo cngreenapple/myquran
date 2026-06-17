@@ -307,8 +307,6 @@ export default function SuratDetail() {
                 ayat={ayat}
                 showTafsir={false}
                 showTransliteration={settings.showTransliteration}
-                arabicFontSize={settings.arabicFontSize}
-                translationFontSize={settings.translationFontSize}
               />
             ))}
           </TabsContent>
@@ -322,8 +320,6 @@ export default function SuratDetail() {
                 ayat={ayat}
                 showTafsir={true}
                 showTransliteration={settings.showTransliteration}
-                arabicFontSize={settings.arabicFontSize}
-                translationFontSize={settings.translationFontSize}
               />
             ))}
           </TabsContent>

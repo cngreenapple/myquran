@@ -16,10 +16,6 @@ export interface ReadingHistoryItem {
 }
 
 export interface AppSettings {
-  themeAccent: "emerald" | "blue" | "purple" | "amber" | "rose";
-  arabicFontSize: "sm" | "base" | "lg" | "xl" | "2xl";
-  translationFontSize: "sm" | "base" | "lg";
-  arabicFont: "amiri" | "scheherazade" | "traditional";
   showVerseOfTheDay: boolean;
   showTransliteration: boolean;
   autoPlayAudio: boolean;
