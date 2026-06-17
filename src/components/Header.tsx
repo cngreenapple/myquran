@@ -20,48 +20,74 @@ const navItems = [
   { to: "/settings", label: "Setting", icon: SettingsIcon, ariaLabel: "Pengaturan aplikasi" },
 ];
 
-// Mobile shows 4 most-used; Asmaul Husna & Settings accessible dari Index/header
-const mobileNavItems = [
-  navItems[0], // Beranda
-  navItems[1], // Sholat
-  navItems[2], // Dzikir
-  navItems[3], // Doa
-];
-
 export function Header() {
   return (
     <header
       className="sticky top-0 z-40 w-full border-b border-border bg-background"
       role="banner"
     >
-      <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 max-w-5xl">
+      <div className="container mx-auto flex h-14 items-center justify-between gap-2 px-3 max-w-5xl">
+        {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-2 group shrink-0"
           aria-label="Al-Quran Digital Indonesia - Halaman utama"
         >
           <div className="relative">
             <div
-              className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl blur-md opacity-40 group-hover:opacity-60 transition-opacity"
+              className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl blur-md opacity-40 group-hover:opacity-60 transition-opacity"
               aria-hidden="true"
             />
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden="true" />
+            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md shadow-emerald-500/20">
+              <BookOpen className="w-4 h-4 text-white" strokeWidth={2.5} aria-hidden="true" />
             </div>
           </div>
           <div className="hidden sm:block">
-            <h1 className="font-bold text-base text-foreground leading-tight">
+            <h1 className="font-bold text-sm text-foreground leading-tight">
               Al-Quran
             </h1>
-            <p className="text-[10px] text-muted-foreground leading-tight font-medium">
-              Digital Indonesia
+            <p className="text-[9px] text-muted-foreground leading-tight font-medium">
+              Digital
             </p>
           </div>
         </Link>
 
-        {/* Desktop Nav - scrollable on smaller screens */}
+        {/* Mobile: Icon-only nav (compact horizontal scroll) */}
         <nav
-          className="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar"
+          className="flex md:hidden items-center gap-0.5 overflow-x-auto no-scrollbar flex-1 justify-end"
+          aria-label="Menu navigasi utama"
+        >
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/"}
+                className={({ isActive }) =>
+                  cn(
+                    "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                  )
+                }
+                aria-label={item.ariaLabel}
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className="w-4 h-4" aria-hidden="true" />
+                    {isActive && <span className="sr-only"> (halaman aktif)</span>}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Desktop: Full nav with labels */}
+        <nav
+          className="hidden md:flex items-center gap-1"
           aria-label="Menu navigasi utama"
         >
           {navItems.map((item) => {
@@ -93,82 +119,15 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1">
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn(
-                "lg:hidden w-9 h-9 rounded-full flex items-center justify-center transition-all",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )
-            }
-            aria-label="Buka pengaturan"
-          >
-            <SettingsIcon className="w-4 h-4" aria-hidden="true" />
-          </NavLink>
-          <ThemeSwitcher />
-        </div>
+        {/* Theme switcher */}
+        <ThemeSwitcher />
       </div>
     </header>
   );
 }
 
+// BottomNav tetap di-export untuk backward compatibility tapi tidak dipakai
 export function BottomNav() {
   const location = useLocation();
-  return (
-    <nav
-      className="fixed bottom-3 left-3 right-3 z-40 md:hidden animate-fade-in"
-      aria-label="Menu navigasi bawah"
-    >
-      <div
-        className={cn(
-          "grid grid-cols-4 gap-1 p-1.5 max-w-md mx-auto",
-          "rounded-full border border-border bg-card/95 backdrop-blur-md",
-          "shadow-lg shadow-black/5",
-        )}
-      >
-        {mobileNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive =
-            item.to === "/"
-              ? location.pathname === "/"
-              : location.pathname.startsWith(item.to);
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/"}
-              className={cn(
-                "flex flex-col items-center gap-0.5 py-2 rounded-full transition-all duration-200",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground active:scale-95",
-              )}
-              aria-label={item.ariaLabel}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <Icon
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  isActive && "scale-110",
-                )}
-                strokeWidth={isActive ? 2.5 : 2}
-                aria-hidden="true"
-              />
-              <span
-                className={cn(
-                  "text-[9px] font-semibold tracking-wide leading-tight",
-                  isActive && "font-bold",
-                )}
-              >
-                {item.label}
-              </span>
-            </NavLink>
-          );
-        })}
-      </div>
-    </nav>
-  );
+  return null;
 }
