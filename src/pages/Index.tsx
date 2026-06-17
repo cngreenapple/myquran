@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, BookOpen, Sparkles, Clock, BookHeart, Hand } from "lucide-react";
+import { Search, BookOpen, Sparkles, Clock, BookHeart, Hand, Star } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { SurahCard } from "@/components/SurahCard";
@@ -11,12 +11,24 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { useSurahList } from "@/hooks/use-surah-list";
 import { useDzikirCounter } from "@/hooks/use-dzikir-counter";
 import { Card, CardContent } from "@/components/ui/card";
+import { ASMAUL_HUSNA } from "@/data/asmaul-husna";
 import { cn } from "@/lib/utils";
 
 export default function Index() {
   const [query, setQuery] = useState("");
   const { data, isLoading, isError, refetch } = useSurahList();
   const { totalCompletedToday } = useDzikirCounter();
+  const [asmaOfTheDay, setAsmaOfTheDay] = useState(ASMAUL_HUSNA[0]);
+
+  // Asma of the day: rotate based on day of year
+  useEffect(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - start.getTime();
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const idx = dayOfYear % ASMAUL_HUSNA.length;
+    setAsmaOfTheDay(ASMAUL_HUSNA[idx]);
+  }, []);
 
   const filteredSurahs = useMemo(() => {
     if (!data) return [];
@@ -34,11 +46,12 @@ export default function Index() {
   const quickActions = [
     {
       to: "/jadwal-sholat",
-      label: "Jadwal Sholat",
+      label: "Sholat",
       icon: Clock,
       color: "from-emerald-500 to-emerald-700",
       bg: "bg-emerald-50 dark:bg-emerald-950/30",
       text: "text-emerald-600 dark:text-emerald-400",
+      badge: null as string | null,
     },
     {
       to: "/dzikir",
@@ -51,11 +64,21 @@ export default function Index() {
     },
     {
       to: "/doa",
-      label: "Kumpulan Doa",
+      label: "Doa",
       icon: Hand,
       color: "from-violet-500 to-violet-700",
       bg: "bg-violet-50 dark:bg-violet-950/30",
       text: "text-violet-600 dark:text-violet-400",
+      badge: null,
+    },
+    {
+      to: "/asmaul-husna",
+      label: "Asmaul Husna",
+      icon: Star,
+      color: "from-rose-500 to-rose-700",
+      bg: "bg-rose-50 dark:bg-rose-950/30",
+      text: "text-rose-600 dark:text-rose-400",
+      badge: null,
     },
   ];
 
@@ -98,8 +121,7 @@ export default function Index() {
                 Baca Al-Qur'an di Mana Saja
               </h1>
               <p className="text-sm sm:text-base text-emerald-50/90 max-w-md leading-relaxed">
-                114 surah dengan terjemahan Bahasa Indonesia, audio murottal,
-                jadwal sholat, dzikir, dan kumpulan doa.
+                114 surah dengan terjemahan, audio murottal, jadwal sholat, dzikir, doa, dan 99 Asmaul Husna.
               </p>
             </div>
           </div>
@@ -110,7 +132,7 @@ export default function Index() {
           <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
             Akses Cepat
           </h2>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="grid grid-cols-4 gap-2 sm:gap-3">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
@@ -119,8 +141,8 @@ export default function Index() {
                   to={action.to}
                   className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-2xl"
                 >
-                  <Card className="border-border/60 hover:border-primary/40 transition-all group-active:scale-[0.98]">
-                    <CardContent className={cn("p-3 sm:p-4 text-center relative", action.bg)}>
+                  <Card className="border-border/60 hover:border-primary/40 transition-all group-active:scale-[0.97]">
+                    <CardContent className={cn("p-2.5 sm:p-3 text-center relative", action.bg)}>
                       {action.badge && (
                         <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                           {action.badge}
@@ -128,13 +150,13 @@ export default function Index() {
                       )}
                       <div
                         className={cn(
-                          "w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-2xl flex items-center justify-center bg-gradient-to-br shadow-md mb-1.5 sm:mb-2",
+                          "w-9 h-9 sm:w-11 sm:h-11 mx-auto rounded-xl flex items-center justify-center bg-gradient-to-br shadow-md mb-1.5",
                           action.color,
                         )}
                       >
-                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
-                      <p className={cn("text-xs sm:text-sm font-semibold", action.text)}>
+                      <p className={cn("text-[10px] sm:text-xs font-semibold leading-tight", action.text)}>
                         {action.label}
                       </p>
                     </CardContent>
@@ -143,6 +165,44 @@ export default function Index() {
               );
             })}
           </div>
+        </section>
+
+        {/* Asmaul Husna of the Day */}
+        <section className="mb-5">
+          <Link
+            to="/asmaul-husna"
+            className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-3xl"
+          >
+            <Card className="overflow-hidden border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent hover:shadow-lg hover:shadow-amber-500/10 transition-all group-active:scale-[0.99]">
+              <CardContent className="p-5 relative">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3" />
+                      Asmaul Husna Hari Ini
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      #{asmaOfTheDay.number} / 99
+                    </p>
+                  </div>
+                  <p
+                    className="font-arabic text-3xl sm:text-4xl text-foreground leading-tight"
+                    dir="rtl"
+                  >
+                    {asmaOfTheDay.arabic}
+                  </p>
+                </div>
+                <div className="mt-3 pt-3 border-t border-amber-500/20">
+                  <p className="text-base font-bold text-foreground">
+                    {asmaOfTheDay.latin}
+                  </p>
+                  <p className="text-sm text-foreground/80 mt-0.5">
+                    {asmaOfTheDay.meaningId}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </section>
 
         {/* Last Read Card */}

@@ -27,6 +27,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const PrayerTimes = lazy(() => import("./pages/PrayerTimes"));
 const Dzikir = lazy(() => import("./pages/Dzikir"));
 const Doa = lazy(() => import("./pages/Doa"));
+const AsmaulHusna = lazy(() => import("./pages/AsmaulHusna"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => (
@@ -59,6 +60,7 @@ const App = () => (
                     <Route path="/jadwal-sholat" element={<PrayerTimes />} />
                     <Route path="/dzikir" element={<Dzikir />} />
                     <Route path="/doa" element={<Doa />} />
+                    <Route path="/asmaul-husna" element={<AsmaulHusna />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
