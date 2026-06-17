@@ -17,7 +17,9 @@ import { ErrorState } from "@/components/ErrorState";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useSurahDetail } from "@/hooks/use-surah-detail";
 import { useLastRead } from "@/hooks/use-last-read";
+import { useReadingStats } from "@/hooks/use-reading-stats";
 import { useAudio } from "@/contexts/audio-context";
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
 
 export default function SuratDetail() {
@@ -27,10 +29,13 @@ export default function SuratDetail() {
 
   const { data, isLoading, isError, refetch } = useSurahDetail(isValidNomor ? nomor : 0);
   const { updateLastRead } = useLastRead();
+  const { trackSurahOpen, trackAyatRead } = useReadingStats();
   const { play, currentSurah, togglePlay } = useAudio();
+  const { settings } = useAppSettings();
   const [activeTab, setActiveTab] = useState<"ayat" | "tafsir">("ayat");
+  const [readAyats, setReadAyats] = useState<Set<number>>(new Set());
 
-  // Update last read when data loads
+  // Update last read + track surah open when data loads
   useEffect(() => {
     if (data) {
       updateLastRead({
@@ -38,15 +43,45 @@ export default function SuratDetail() {
         surahName: data.namaLatin,
         ayatNumber: 1,
       });
+      trackSurahOpen(data.nomor, data.namaLatin);
     }
-  }, [data, updateLastRead]);
+  }, [data, updateLastRead, trackSurahOpen]);
+
+  // Track ayat reads via IntersectionObserver
+  useEffect(() => {
+    if (!data) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const ayatNum = parseInt(
+              entry.target.id.replace("ayat-", ""),
+              10,
+            );
+            if (!isNaN(ayatNum) && !readAyats.has(ayatNum)) {
+              setReadAyats((prev) => new Set(prev).add(ayatNum));
+              trackAyatRead(data.nomor, data.namaLatin, ayatNum);
+            }
+          }
+        });
+      },
+      { threshold: 0.5 },
+    );
+
+    // Observe all ayat elements
+    const elements = document.querySelectorAll('[id^="ayat-"]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [data, readAyats, trackAyatRead]);
 
   // Scroll to ayat from hash
   useEffect(() => {
     if (!data) return;
     const hash = window.location.hash;
     if (hash.startsWith("#ayat-")) {
-      const ayatNum = parseInt(hash.replace("#ayat-", ""));
+      const ayatNum = parseInt(hash.replace("#ayat-", ""), 10);
       if (!isNaN(ayatNum)) {
         setTimeout(() => {
           const element = document.getElementById(`ayat-${ayatNum}`);
@@ -219,7 +254,7 @@ export default function SuratDetail() {
               dir="rtl"
               lang="ar"
             >
-              بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+              بِسْمِ اللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </p>
           </div>
         )}
@@ -255,6 +290,9 @@ export default function SuratDetail() {
                 surahName={data.namaLatin}
                 ayat={ayat}
                 showTafsir={false}
+                showTransliteration={settings.showTransliteration}
+                arabicFontSize={settings.arabicFontSize}
+                translationFontSize={settings.translationFontSize}
               />
             ))}
           </TabsContent>
@@ -267,6 +305,9 @@ export default function SuratDetail() {
                 surahName={data.namaLatin}
                 ayat={ayat}
                 showTafsir={true}
+                showTransliteration={settings.showTransliteration}
+                arabicFontSize={settings.arabicFontSize}
+                translationFontSize={settings.translationFontSize}
               />
             ))}
           </TabsContent>

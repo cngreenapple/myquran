@@ -1,7 +1,9 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Surah } from "@/types/quran";
+import { useReadingStats } from "@/hooks/use-reading-stats";
 import { cn } from "@/lib/utils";
 
 interface SurahCardProps {
@@ -29,7 +31,10 @@ function highlightText(text: string, query: string) {
 }
 
 function SurahCardComponent({ surah, query = "" }: SurahCardProps) {
+  const { stats } = useReadingStats();
   const arabicName = surah.nama.replace(/^سُورَةُ\s*/, "");
+  const isOpened = stats.surahsOpened.includes(surah.nomor);
+
   return (
     <Link
       to={`/surat/${surah.nomor}`}
@@ -39,14 +44,26 @@ function SurahCardComponent({ surah, query = "" }: SurahCardProps) {
         className={cn(
           "overflow-hidden border-border/60 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200",
           "group-active:scale-[0.98]",
+          isOpened && "ring-1 ring-emerald-500/30",
         )}
       >
         <CardContent className="p-4">
           <div className="flex items-center gap-3 sm:gap-4">
             {/* Number Badge */}
             <div className="relative shrink-0">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold shadow-md shadow-emerald-500/20 ring-2 ring-emerald-100 dark:ring-emerald-900/50">
-                {surah.nomor}
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold shadow-md ring-2",
+                  isOpened
+                    ? "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30 ring-emerald-100 dark:ring-emerald-900/50"
+                    : "bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-emerald-500/20 ring-emerald-100 dark:ring-emerald-900/50",
+                )}
+              >
+                {isOpened ? (
+                  <Check className="w-5 h-5" />
+                ) : (
+                  surah.nomor
+                )}
               </div>
             </div>
 
@@ -73,6 +90,14 @@ function SurahCardComponent({ surah, query = "" }: SurahCardProps) {
                 <span className="text-[10px] text-muted-foreground font-medium">
                   {surah.jumlahAyat} Ayat
                 </span>
+                {isOpened && (
+                  <>
+                    <span className="text-[10px] text-muted-foreground">•</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                      Terbuka
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 

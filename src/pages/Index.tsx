@@ -14,11 +14,14 @@ import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { SurahCard } from "@/components/SurahCard";
 import { LastReadCard } from "@/components/LastReadCard";
+import { StatsCard } from "@/components/StatsCard";
+import { VerseOfTheDay } from "@/components/VerseOfTheDay";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useSurahList } from "@/hooks/use-surah-list";
 import { useDzikirCounter } from "@/hooks/use-dzikir-counter";
+import { useAppSettings } from "@/hooks/use-app-settings";
 import { Card, CardContent } from "@/components/ui/card";
 import { ASMAUL_HUSNA } from "@/data/asmaul-husna";
 import { getTodayInfo, getUpcomingEvents, formatFullDate } from "@/lib/hijri-calendar";
@@ -28,6 +31,7 @@ export default function Index() {
   const [query, setQuery] = useState("");
   const { data, isLoading, isError, refetch } = useSurahList();
   const { totalCompletedToday } = useDzikirCounter();
+  const { settings } = useAppSettings();
   const [asmaOfTheDay, setAsmaOfTheDay] = useState(ASMAUL_HUSNA[0]);
   const [todayInfo, setTodayInfo] = useState(() => getTodayInfo());
   const [upcoming, setUpcoming] = useState(() => getUpcomingEvents({ daysAhead: 30 }).slice(0, 1));
@@ -150,6 +154,11 @@ export default function Index() {
           </div>
         </section>
 
+        {/* Stats Card */}
+        <section className="mb-5">
+          <StatsCard />
+        </section>
+
         {/* Quick Actions */}
         <section className="mb-5">
           <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
@@ -189,6 +198,13 @@ export default function Index() {
             })}
           </div>
         </section>
+
+        {/* Verse of the Day */}
+        {settings.showVerseOfTheDay && (
+          <section className="mb-5">
+            <VerseOfTheDay />
+          </section>
+        )}
 
         {/* Today Widget */}
         <section className="mb-5">

@@ -8,6 +8,8 @@ import { AudioProvider } from "@/contexts/audio-context";
 import { BookmarkProvider } from "@/hooks/use-bookmarks";
 import { LastReadProvider } from "@/hooks/use-last-read";
 import { DzikirProvider } from "@/hooks/use-dzikir-counter";
+import { ReadingStatsProvider } from "@/hooks/use-reading-stats";
+import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { PWAStatusBar } from "@/components/PWAStatusBar";
 
@@ -33,47 +35,51 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BookmarkProvider>
-      <LastReadProvider>
-        <DzikirProvider>
-          <AudioProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
-                <Suspense
-                  fallback={
-                    <div className="min-h-screen bg-background">
-                      <div className="container mx-auto px-4 py-6 max-w-5xl">
-                        <SurahListSkeleton count={6} />
-                      </div>
-                    </div>
-                  }
-                >
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/surat/:id" element={<SuratDetail />} />
-                    <Route path="/jadwal-sholat" element={<PrayerTimes />} />
-                    <Route path="/dzikir" element={<Dzikir />} />
-                    <Route path="/doa" element={<Doa />} />
-                    <Route path="/asmaul-husna" element={<AsmaulHusna />} />
-                    <Route path="/kalender" element={<Kalender />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <PWAStatusBar />
-              </BrowserRouter>
-            </TooltipProvider>
-          </AudioProvider>
-        </DzikirProvider>
-      </LastReadProvider>
-    </BookmarkProvider>
+    <AppSettingsProvider>
+      <ReadingStatsProvider>
+        <BookmarkProvider>
+          <LastReadProvider>
+            <DzikirProvider>
+              <AudioProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter
+                    future={{
+                      v7_startTransition: true,
+                      v7_relativeSplatPath: true,
+                    }}
+                  >
+                    <Suspense
+                      fallback={
+                        <div className="min-h-screen bg-background">
+                          <div className="container mx-auto px-4 py-6 max-w-5xl">
+                            <SurahListSkeleton count={6} />
+                          </div>
+                        </div>
+                      }
+                    >
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/surat/:id" element={<SuratDetail />} />
+                        <Route path="/jadwal-sholat" element={<PrayerTimes />} />
+                        <Route path="/dzikir" element={<Dzikir />} />
+                        <Route path="/doa" element={<Doa />} />
+                        <Route path="/asmaul-husna" element={<AsmaulHusna />} />
+                        <Route path="/kalender" element={<Kalender />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                    <PWAStatusBar />
+                  </BrowserRouter>
+                </TooltipProvider>
+              </AudioProvider>
+            </DzikirProvider>
+          </LastReadProvider>
+        </BookmarkProvider>
+      </ReadingStatsProvider>
+    </AppSettingsProvider>
   </QueryClientProvider>
 );
 

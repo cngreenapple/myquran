@@ -8,6 +8,13 @@ import {
   Github,
   BookOpen,
   Bookmark,
+  RotateCcw,
+  Type,
+  Palette,
+  Bell,
+  Eye,
+  Play,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,12 +24,28 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { useTheme } from "@/hooks/use-theme";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useLastRead } from "@/hooks/use-last-read";
+import { useReadingStats } from "@/hooks/use-reading-stats";
+import { useAppSettings, ACCENT_COLORS } from "@/hooks/use-app-settings";
 import { cn } from "@/lib/utils";
+import { showSuccess } from "@/utils/toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { bookmarks, clearBookmarks } = useBookmarks();
   const { lastRead, clearLastRead } = useLastRead();
+  const { stats, resetStats } = useReadingStats();
+  const { settings, updateSetting, resetSettings } = useAppSettings();
 
   return (
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
@@ -52,10 +75,68 @@ export default function Settings() {
 
         {/* Appearance */}
         <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+            <Palette className="w-3.5 h-3.5" />
             Tampilan
           </h2>
-          <Card className="border-border/60">
+
+          {/* Theme Accent */}
+          <Card className="border-border/60 mb-3">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4 mb-3">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: `hsl(${ACCENT_COLORS[settings.themeAccent].value} / 0.15)`,
+                  }}
+                >
+                  <Palette
+                    className="w-5 h-5"
+                    style={{ color: `hsl(${ACCENT_COLORS[settings.themeAccent].value})` }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground">Warna Aksen</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {ACCENT_COLORS[settings.themeAccent].name}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {(Object.keys(ACCENT_COLORS) as Array<keyof typeof ACCENT_COLORS>).map(
+                  (key) => {
+                    const isActive = settings.themeAccent === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => updateSetting("themeAccent", key)}
+                        className={cn(
+                          "flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all",
+                          isActive
+                            ? "border-foreground bg-muted"
+                            : "border-transparent hover:border-border",
+                        )}
+                        aria-label={ACCENT_COLORS[key].name}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full shadow-md"
+                          style={{
+                            backgroundColor: `hsl(${ACCENT_COLORS[key].value})`,
+                          }}
+                        />
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {ACCENT_COLORS[key].name.split(" ")[0]}
+                        </span>
+                      </button>
+                    );
+                  },
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dark Mode */}
+          <Card className="border-border/60 mb-3">
             <CardContent className="p-5">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -102,6 +183,138 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Font Settings */}
+          <Card className="border-border/60">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Type className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-foreground">Ukuran Font</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Sesuaikan ukuran teks Arab & terjemahan
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                    Teks Arab
+                  </p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {(["sm", "base", "lg", "xl", "2xl"] as const).map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => updateSetting("arabicFontSize", size)}
+                        className={cn(
+                          "py-2 rounded-lg text-xs font-bold uppercase transition-all border-2",
+                          settings.arabicFontSize === size
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/40 text-muted-foreground",
+                        )}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-border/40">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                    Terjemahan
+                  </p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(["sm", "base", "lg"] as const).map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => updateSetting("translationFontSize", size)}
+                        className={cn(
+                          "py-2 rounded-lg text-xs font-bold uppercase transition-all border-2",
+                          settings.translationFontSize === size
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/40 text-muted-foreground",
+                        )}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Reading Preferences */}
+        <section className="mb-5">
+          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+            <Eye className="w-3.5 h-3.5" />
+            Preferensi Bacaan
+          </h2>
+          <Card className="border-border/60">
+            <CardContent className="p-2">
+              <button
+                onClick={() =>
+                  updateSetting("showTransliteration", !settings.showTransliteration)
+                }
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+              >
+                <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground">
+                    Tampilkan Transliterasi Latin
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Bacaan latin per kata di setiap ayat
+                  </p>
+                </div>
+                <div
+                  className={cn(
+                    "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
+                    settings.showTransliteration ? "bg-primary" : "bg-muted-foreground/30",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-5 h-5 rounded-full bg-white shadow transition-transform",
+                      settings.showTransliteration && "translate-x-4",
+                    )}
+                  />
+                </div>
+              </button>
+
+              <button
+                onClick={() => updateSetting("showVerseOfTheDay", !settings.showVerseOfTheDay)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+              >
+                <Sparkles className="w-5 h-5 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground">
+                    Tampilkan Ayat Hari Ini
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Widget random ayat di beranda
+                  </p>
+                </div>
+                <div
+                  className={cn(
+                    "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
+                    settings.showVerseOfTheDay ? "bg-primary" : "bg-muted-foreground/30",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "w-5 h-5 rounded-full bg-white shadow transition-transform",
+                      settings.showVerseOfTheDay && "translate-x-4",
+                    )}
+                  />
+                </div>
+              </button>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Statistics */}
@@ -127,11 +340,9 @@ export default function Settings() {
                   <BookOpen className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-2xl font-bold text-foreground truncate">
-                  {lastRead ? "1" : "0"}
+                  {stats.surahsOpened.length}
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Riwayat Baca
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">Surah Dibuka</p>
               </CardContent>
             </Card>
           </div>
@@ -144,6 +355,42 @@ export default function Settings() {
           </h2>
           <Card className="border-border/60">
             <CardContent className="p-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left group">
+                    <RotateCcw className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">
+                        Reset Statistik Bacaan
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Hapus streak & history bacaan
+                      </p>
+                    </div>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset Statistik?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Statistik bacaan dan history akan dihapus. Tindakan ini tidak dapat dibatalkan.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-full">Batal</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        resetStats();
+                        showSuccess("Statistik direset");
+                      }}
+                      className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Reset
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               <button
                 onClick={() => clearLastRead()}
                 disabled={!lastRead}
@@ -159,21 +406,45 @@ export default function Settings() {
                   </p>
                 </div>
               </button>
-              <button
-                onClick={() => clearBookmarks()}
-                disabled={bookmarks.length === 0}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left group"
-              >
-                <Bookmark className="w-5 h-5 text-muted-foreground group-hover:text-destructive shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-foreground group-hover:text-destructive">
-                    Hapus Semua Bookmark
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {bookmarks.length} bookmark tersimpan
-                  </p>
-                </div>
-              </button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    disabled={bookmarks.length === 0}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left group"
+                  >
+                    <Bookmark className="w-5 h-5 text-muted-foreground group-hover:text-destructive shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground group-hover:text-destructive">
+                        Hapus Semua Bookmark
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {bookmarks.length} bookmark tersimpan
+                      </p>
+                    </div>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Hapus Semua Bookmark?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tindakan ini tidak dapat dibatalkan. Semua bookmark Anda akan dihapus permanen.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-full">Batal</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        clearBookmarks();
+                        showSuccess("Semua bookmark dihapus");
+                      }}
+                      className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Hapus Semua
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </section>
@@ -197,8 +468,7 @@ export default function Settings() {
 
               <div className="space-y-2 text-sm text-foreground/80 leading-relaxed">
                 <p>
-                  Aplikasi Al-Qur'an digital modern dengan terjemahan Bahasa
-                  Indonesia, audio murottal, dan fitur bookmark.
+                  Aplikasi Al-Qur'an digital modern dengan terjemahan Bahasa Indonesia, audio murottal, jadwal sholat, dzikir, doa, Asmaul Husna, dan kalender Hijriah.
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Data disediakan oleh{" "}
@@ -236,3 +506,6 @@ export default function Settings() {
     </div>
   );
 }
+
+// Import Sparkles for icon
+import { Sparkles } from "lucide-react";
