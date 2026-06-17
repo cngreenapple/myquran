@@ -8,6 +8,7 @@ import { AudioProvider } from "@/contexts/audio-context";
 import { BookmarkProvider } from "@/hooks/use-bookmarks";
 import { LastReadProvider } from "@/hooks/use-last-read";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
+import { PWAStatusBar } from "@/components/PWAStatusBar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <PWAStatusBar />
             </BrowserRouter>
           </TooltipProvider>
         </AudioProvider>

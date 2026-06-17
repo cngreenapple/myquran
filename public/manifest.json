@@ -1,0 +1,26 @@
+{
+  "name": "Al-Qur'an Digital Indonesia",
+  "short_name": "Al-Quran",
+  "description": "Aplikasi Al-Qur'an digital dengan terjemahan Indonesia, jadwal sholat, arah kiblat, dan dzikir.",
+  "theme_color": "#047857",
+  "background_color": "#fafaf5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
