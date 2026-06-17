@@ -94,3 +94,13 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ErrorBoundary>,
 );
+
+// Register PWA service worker (autoUpdate)
+if ("serviceWorker" in navigator) {
+  // vite-plugin-pwa akan auto-register, ini hanya untuk safety
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.ready.catch((err) => {
+      console.warn("[PWA] Service worker registration failed:", err);
+    });
+  });
+}
