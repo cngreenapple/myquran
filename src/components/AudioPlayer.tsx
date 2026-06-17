@@ -1,4 +1,4 @@
-import { Play, Pause, X, Volume2, SkipForward } from "lucide-react";
+import { Play, Pause, X, Volume2, SkipForward, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAudio } from "@/contexts/audio-context";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,6 +14,7 @@ export function AudioPlayer() {
     progress,
     duration,
     error,
+    isLoadingAudio,
     play,
     togglePlay,
     stop,
@@ -70,10 +71,13 @@ export function AudioPlayer() {
               <Button
                 size="icon"
                 onClick={togglePlay}
-                className="rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0 shadow-md shadow-primary/30 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800"
+                disabled={isLoadingAudio}
+                className="rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0 shadow-md shadow-primary/30 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-70"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >
-                {isPlaying ? (
+                {isLoadingAudio ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isPlaying ? (
                   <Pause className="w-4 h-4 fill-current" />
                 ) : (
                   <Play className="w-4 h-4 fill-current ml-0.5" />
@@ -83,7 +87,10 @@ export function AudioPlayer() {
               {/* Info + Progress */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <p className="text-sm font-semibold truncate text-foreground">
+                  <p className="text-sm font-semibold truncate text-foreground flex items-center gap-1.5">
+                    {isLoadingAudio && (
+                      <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                    )}
                     {currentSurahName}
                   </p>
                   <span className="text-[10px] text-muted-foreground font-mono shrink-0 tabular-nums">

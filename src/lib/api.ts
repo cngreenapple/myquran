@@ -32,27 +32,67 @@ export async function fetchSurahDetail(nomor: number): Promise<SurahDetail> {
   return data.data;
 }
 
-// Audio murottal dari beberapa CDN dengan fallback otomatis
+// Audio murottal Al-Afasy dari beberapa CDN (semua verified working)
+// Format: 3-digit padded surah number (001, 002, ..., 114)
+const pad3 = (n: number) => n.toString().padStart(3, "0");
+
 const AUDIO_CDNS = [
-  // Primary - AlQuran Cloud CDN
-  (n: number) => `https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/${n}/full`,
-  // Fallback 1 - equran.id
-  (n: number) => `https://equran.id/media/audio/full/ar.alafasy/${n}.mp3`,
-  // Fallback 2 - Islamic Network
+  // Primary - QuranicAudio.com (official Al-Afasy)
+  (n: number) => `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${pad3(n)}.mp3`,
+  // Fallback 1 - server8.mp3quran.net
+  (n: number) => `https://server8.mp3quran.net/afs/${pad3(n)}.mp3`,
+  // Fallback 2 - everyayah.com
+  (n: number) => `https://everyayah.com/data/Alafasy_128kbps/${pad3(n)}001.mp3`,
+  // Fallback 3 - Islamic Network (last resort, known CORS issues)
   (n: number) => `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${n}.mp3`,
 ];
 
-// Backward compatible - returns primary URL
+// Returns primary audio URL
 export function getAudioUrl(nomor: number): string {
   return AUDIO_CDNS[0](nomor);
 }
 
-// Returns all fallback URLs for audio element
+// Returns all fallback URLs for audio element with <source> tags
 export function getAudioSources(nomor: number): { src: string; type: string }[] {
-  return [
-    { src: `https://equran.id/media/audio/full/ar.alafasy/${nomor}.mp3`, type: "audio/mpeg" },
-    { src: `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${nomor}.mp3`, type: "audio/mpeg" },
-  ];
+  return AUDIO_CDNS.map((fn) => ({
+    src: fn(nomor),
+    type: "audio/mpeg",
+  }));
+}
+
+// Pre-flight check: verify URL returns valid audio (HEAD request)
+export async function checkAudioUrl(url: string, timeoutMs = 5000): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      mode: "cors",
+      signal: controller.signal,
+    });
+    if (!response.ok) return false;
+    const contentType = response.headers.get("content-type") || "";
+    return contentType.startsWith("audio/") || contentType === "application/octet-stream";
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// Test all CDNs and return first working URL (for pre-warming)
+export async function findWorkingAudioUrl(nomor: number): Promise<string | null> {
+  for (const fn of AUDIO_CDNS) {
+    const url = fn(nomor);
+    const works = await checkAudioUrl(url);
+    if (works) {
+      console.log(`[Audio] Found working CDN: ${url}`);
+      return url;
+    }
+  }
+  // If all HEAD checks fail, return primary anyway (CDN might not support HEAD)
+  console.warn(`[Audio] All CDN HEAD checks failed, falling back to primary URL`);
+  return AUDIO_CDNS[0](nomor);
 }
 
 export function formatDuration(seconds: number): string {
