@@ -53,14 +53,16 @@ export function BookmarkButton({
             ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
             : "bg-muted text-muted-foreground hover:bg-muted/70",
         )}
-        aria-label={bookmarked ? "Hapus bookmark" : "Tambah bookmark"}
+        aria-label={bookmarked ? "Hapus bookmark ayat ini" : "Tambah ayat ini ke bookmark"}
+        aria-pressed={bookmarked}
         type="button"
       >
         {bookmarked ? (
-          <BookmarkCheck className="w-4 h-4 fill-current" />
+          <BookmarkCheck className="w-4 h-4 fill-current" aria-hidden="true" />
         ) : (
-          <Bookmark className="w-4 h-4" />
+          <Bookmark className="w-4 h-4" aria-hidden="true" />
         )}
+        <span className="sr-only">{bookmarked ? "Hapus bookmark" : "Bookmark"}</span>
       </button>
     );
   }
@@ -76,11 +78,13 @@ export function BookmarkButton({
         bookmarked &&
           "text-amber-600 hover:text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30",
       )}
+      aria-label={bookmarked ? "Hapus bookmark ayat ini" : "Tambah ayat ini ke bookmark"}
+      aria-pressed={bookmarked}
     >
       {bookmarked ? (
-        <BookmarkCheck className="w-4 h-4 fill-current" />
+        <BookmarkCheck className="w-4 h-4 fill-current" aria-hidden="true" />
       ) : (
-        <Bookmark className="w-4 h-4" />
+        <Bookmark className="w-4 h-4" aria-hidden="true" />
       )}
       <span className="text-xs font-medium">
         {bookmarked ? "Tersimpan" : "Bookmark"}

@@ -3,7 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function SurahListSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3"
+      aria-busy="true"
+      aria-label="Memuat daftar surat"
+      role="status"
+    >
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="overflow-hidden">
           <CardContent className="p-4">
@@ -19,13 +24,19 @@ export function SurahListSkeleton({ count = 8 }: { count?: number }) {
           </CardContent>
         </Card>
       ))}
+      <span className="sr-only">Sedang memuat, harap tunggu...</span>
     </div>
   );
 }
 
 export function SurahDetailSkeleton() {
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      aria-busy="true"
+      aria-label="Memuat detail surat"
+      role="status"
+    >
       <Skeleton className="h-48 w-full rounded-3xl" />
       <div className="space-y-4">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -43,6 +54,7 @@ export function SurahDetailSkeleton() {
           </Card>
         ))}
       </div>
+      <span className="sr-only">Sedang memuat, harap tunggu...</span>
     </div>
   );
 }

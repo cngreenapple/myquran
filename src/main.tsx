@@ -5,11 +5,11 @@ import "./globals.css";
 
 class ErrorBoundary extends Component<
   { children: ReactNode },
-  { hasError: boolean; error: Error | null }
+  { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null }
 > {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -17,8 +17,37 @@ class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log to console in dev; could integrate with Sentry/LogRocket in prod
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+    this.setState({ errorInfo });
+
+    // Optional: report to analytics
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      try {
+        (window as any).gtag("event", "exception", {
+          description: error.message,
+          fatal: true,
+        });
+      } catch {}
+    }
   }
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleReset = () => {
+    try {
+      // Clear all app data to recover from corrupted state
+      const keys = Object.keys(localStorage);
+      keys.forEach((k) => {
+        if (k.startsWith("quran-")) localStorage.removeItem(k);
+      });
+    } catch (e) {
+      console.error("Failed to clear localStorage", e);
+    }
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -35,12 +64,13 @@ class ErrorBoundary extends Component<
             justifyContent: "center",
             gap: "1rem",
           }}
+          role="alert"
         >
           <h1 style={{ fontSize: "1.5rem", color: "#dc2626" }}>
             ⚠️ Terjadi Kesalahan
           </h1>
           <p style={{ color: "#64748b", maxWidth: "500px" }}>
-            Aplikasi mengalami error. Silakan refresh halaman.
+            Aplikasi mengalami error. Silakan refresh halaman atau reset data aplikasi.
           </p>
           <details
             style={{
@@ -64,23 +94,39 @@ class ErrorBoundary extends Component<
               }}
             >
               {this.state.error?.toString()}
+              {this.state.errorInfo?.componentStack}
             </pre>
           </details>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              marginTop: "1rem",
-              padding: "0.5rem 1.5rem",
-              background: "#047857",
-              color: "white",
-              border: "none",
-              borderRadius: "9999px",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
-          >
-            Refresh Halaman
-          </button>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
+            <button
+              onClick={this.handleReload}
+              style={{
+                padding: "0.5rem 1.5rem",
+                background: "#047857",
+                color: "white",
+                border: "none",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Refresh Halaman
+            </button>
+            <button
+              onClick={this.handleReset}
+              style={{
+                padding: "0.5rem 1.5rem",
+                background: "transparent",
+                color: "#dc2626",
+                border: "1px solid #dc2626",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Reset & Refresh
+            </button>
+          </div>
         </div>
       );
     }
@@ -95,7 +141,7 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>,
 );
 
-// PWA: Register service worker manually (tidak butuh package tambahan)
+// PWA: Register service worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker

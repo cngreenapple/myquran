@@ -5,16 +5,14 @@ import {
   Sun,
   Info,
   Heart,
-  Github,
   BookOpen,
   Bookmark,
   RotateCcw,
   Type,
   Palette,
-  Bell,
   Eye,
-  Play,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +24,7 @@ import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useLastRead } from "@/hooks/use-last-read";
 import { useReadingStats } from "@/hooks/use-reading-stats";
 import { useAppSettings, ACCENT_COLORS } from "@/hooks/use-app-settings";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 import { showSuccess } from "@/utils/toast";
 import {
@@ -41,6 +40,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function Settings() {
+  useDocumentTitle("Pengaturan");
+
   const { theme, setTheme } = useTheme();
   const { bookmarks, clearBookmarks } = useBookmarks();
   const { lastRead, clearLastRead } = useLastRead();
@@ -51,7 +52,10 @@ export default function Settings() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="settings-title"
+      >
         <Button
           variant="ghost"
           asChild
@@ -59,13 +63,13 @@ export default function Settings() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         <section className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+          <h1 id="settings-title" className="text-2xl sm:text-3xl font-bold text-foreground">
             Pengaturan
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -74,9 +78,12 @@ export default function Settings() {
         </section>
 
         {/* Appearance */}
-        <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
-            <Palette className="w-3.5 h-3.5" />
+        <section className="mb-5" aria-labelledby="tampilan-heading">
+          <h2
+            id="tampilan-heading"
+            className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2"
+          >
+            <Palette className="w-3.5 h-3.5" aria-hidden="true" />
             Tampilan
           </h2>
 
@@ -89,6 +96,7 @@ export default function Settings() {
                   style={{
                     backgroundColor: `hsl(${ACCENT_COLORS[settings.themeAccent].value} / 0.15)`,
                   }}
+                  aria-hidden="true"
                 >
                   <Palette
                     className="w-5 h-5"
@@ -102,7 +110,11 @@ export default function Settings() {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-5 gap-2">
+              <div
+                className="grid grid-cols-5 gap-2"
+                role="radiogroup"
+                aria-label="Pilihan warna aksen"
+              >
                 {(Object.keys(ACCENT_COLORS) as Array<keyof typeof ACCENT_COLORS>).map(
                   (key) => {
                     const isActive = settings.themeAccent === key;
@@ -116,6 +128,8 @@ export default function Settings() {
                             ? "border-foreground bg-muted"
                             : "border-transparent hover:border-border",
                         )}
+                        role="radio"
+                        aria-checked={isActive}
                         aria-label={ACCENT_COLORS[key].name}
                       >
                         <div
@@ -123,6 +137,7 @@ export default function Settings() {
                           style={{
                             backgroundColor: `hsl(${ACCENT_COLORS[key].value})`,
                           }}
+                          aria-hidden="true"
                         />
                         <span className="text-[10px] text-muted-foreground font-medium">
                           {ACCENT_COLORS[key].name.split(" ")[0]}
@@ -139,7 +154,10 @@ export default function Settings() {
           <Card className="border-border/60 mb-3">
             <CardContent className="p-5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div
+                  className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0"
+                  aria-hidden="true"
+                >
                   {theme === "dark" ? (
                     <Moon className="w-5 h-5 text-primary" />
                   ) : (
@@ -155,7 +173,11 @@ export default function Settings() {
                 <ThemeSwitcher />
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/60">
+              <div
+                className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-border/60"
+                role="radiogroup"
+                aria-label="Pilihan tema"
+              >
                 <button
                   onClick={() => setTheme("light")}
                   className={cn(
@@ -164,8 +186,10 @@ export default function Settings() {
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/40 text-muted-foreground",
                   )}
+                  role="radio"
+                  aria-checked={theme === "light"}
                 >
-                  <Sun className="w-4 h-4" />
+                  <Sun className="w-4 h-4" aria-hidden="true" />
                   Terang
                 </button>
                 <button
@@ -176,8 +200,10 @@ export default function Settings() {
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border hover:border-primary/40 text-muted-foreground",
                   )}
+                  role="radio"
+                  aria-checked={theme === "dark"}
                 >
-                  <Moon className="w-4 h-4" />
+                  <Moon className="w-4 h-4" aria-hidden="true" />
                   Gelap
                 </button>
               </div>
@@ -188,7 +214,10 @@ export default function Settings() {
           <Card className="border-border/60">
             <CardContent className="p-5">
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <div
+                  className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0"
+                  aria-hidden="true"
+                >
                   <Type className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -204,7 +233,11 @@ export default function Settings() {
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
                     Teks Arab
                   </p>
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div
+                    className="grid grid-cols-5 gap-1.5"
+                    role="radiogroup"
+                    aria-label="Ukuran font Arab"
+                  >
                     {(["sm", "base", "lg", "xl", "2xl"] as const).map((size) => (
                       <button
                         key={size}
@@ -215,6 +248,8 @@ export default function Settings() {
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border hover:border-primary/40 text-muted-foreground",
                         )}
+                        role="radio"
+                        aria-checked={settings.arabicFontSize === size}
                       >
                         {size}
                       </button>
@@ -226,7 +261,11 @@ export default function Settings() {
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
                     Terjemahan
                   </p>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div
+                    className="grid grid-cols-3 gap-1.5"
+                    role="radiogroup"
+                    aria-label="Ukuran font terjemahan"
+                  >
                     {(["sm", "base", "lg"] as const).map((size) => (
                       <button
                         key={size}
@@ -237,6 +276,8 @@ export default function Settings() {
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border hover:border-primary/40 text-muted-foreground",
                         )}
+                        role="radio"
+                        aria-checked={settings.translationFontSize === size}
                       >
                         {size}
                       </button>
@@ -249,9 +290,12 @@ export default function Settings() {
         </section>
 
         {/* Reading Preferences */}
-        <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
-            <Eye className="w-3.5 h-3.5" />
+        <section className="mb-5" aria-labelledby="preferensi-heading">
+          <h2
+            id="preferensi-heading"
+            className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-2"
+          >
+            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
             Preferensi Bacaan
           </h2>
           <Card className="border-border/60">
@@ -261,8 +305,9 @@ export default function Settings() {
                   updateSetting("showTransliteration", !settings.showTransliteration)
                 }
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                aria-pressed={settings.showTransliteration}
               >
-                <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" />
+                <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
                     Tampilkan Transliterasi Latin
@@ -276,6 +321,7 @@ export default function Settings() {
                     "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
                     settings.showTransliteration ? "bg-primary" : "bg-muted-foreground/30",
                   )}
+                  aria-hidden="true"
                 >
                   <div
                     className={cn(
@@ -289,8 +335,9 @@ export default function Settings() {
               <button
                 onClick={() => updateSetting("showVerseOfTheDay", !settings.showVerseOfTheDay)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left"
+                aria-pressed={settings.showVerseOfTheDay}
               >
-                <Sparkles className="w-5 h-5 text-muted-foreground shrink-0" />
+                <Sparkles className="w-5 h-5 text-muted-foreground shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
                     Tampilkan Ayat Hari Ini
@@ -304,6 +351,7 @@ export default function Settings() {
                     "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
                     settings.showVerseOfTheDay ? "bg-primary" : "bg-muted-foreground/30",
                   )}
+                  aria-hidden="true"
                 >
                   <div
                     className={cn(
@@ -318,14 +366,20 @@ export default function Settings() {
         </section>
 
         {/* Statistics */}
-        <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+        <section className="mb-5" aria-labelledby="statistik-heading">
+          <h2
+            id="statistik-heading"
+            className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1"
+          >
             Statistik
           </h2>
           <div className="grid grid-cols-2 gap-3">
             <Card className="border-border/60">
               <CardContent className="p-4 text-center">
-                <div className="w-10 h-10 mx-auto rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-2">
+                <div
+                  className="w-10 h-10 mx-auto rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-2"
+                  aria-hidden="true"
+                >
                   <Bookmark className="w-5 h-5 text-amber-600 dark:text-amber-400 fill-amber-600/20" />
                 </div>
                 <p className="text-2xl font-bold text-foreground">
@@ -336,7 +390,10 @@ export default function Settings() {
             </Card>
             <Card className="border-border/60">
               <CardContent className="p-4 text-center">
-                <div className="w-10 h-10 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                <div
+                  className="w-10 h-10 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-2"
+                  aria-hidden="true"
+                >
                   <BookOpen className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-2xl font-bold text-foreground truncate">
@@ -349,8 +406,11 @@ export default function Settings() {
         </section>
 
         {/* Data Management */}
-        <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+        <section className="mb-5" aria-labelledby="data-heading">
+          <h2
+            id="data-heading"
+            className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1"
+          >
             Data
           </h2>
           <Card className="border-border/60">
@@ -358,7 +418,10 @@ export default function Settings() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors text-left group">
-                    <RotateCcw className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                    <RotateCcw
+                      className="w-5 h-5 text-muted-foreground group-hover:text-foreground shrink-0"
+                      aria-hidden="true"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-foreground">
                         Reset Statistik Bacaan
@@ -396,7 +459,7 @@ export default function Settings() {
                 disabled={!lastRead}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
               >
-                <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" />
+                <BookOpen className="w-5 h-5 text-muted-foreground shrink-0" aria-hidden="true" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm text-foreground">
                     Hapus Riwayat Terakhir Dibaca
@@ -413,7 +476,10 @@ export default function Settings() {
                     disabled={bookmarks.length === 0}
                     className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left group"
                   >
-                    <Bookmark className="w-5 h-5 text-muted-foreground group-hover:text-destructive shrink-0" />
+                    <Bookmark
+                      className="w-5 h-5 text-muted-foreground group-hover:text-destructive shrink-0"
+                      aria-hidden="true"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-foreground group-hover:text-destructive">
                         Hapus Semua Bookmark
@@ -450,14 +516,20 @@ export default function Settings() {
         </section>
 
         {/* About */}
-        <section className="mb-5">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+        <section className="mb-5" aria-labelledby="tentang-heading">
+          <h2
+            id="tentang-heading"
+            className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1"
+          >
             Tentang
           </h2>
           <Card className="border-border/60">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0">
+                <div
+                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0"
+                  aria-hidden="true"
+                >
                   <BookOpen className="w-6 h-6 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
@@ -494,7 +566,7 @@ export default function Settings() {
               </div>
 
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/60 text-xs text-muted-foreground">
-                <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" aria-hidden="true" />
                 <span>Dibuat dengan cinta untuk umat Muslim</span>
               </div>
             </CardContent>
@@ -506,6 +578,3 @@ export default function Settings() {
     </div>
   );
 }
-
-// Import Sparkles for icon
-import { Sparkles } from "lucide-react";

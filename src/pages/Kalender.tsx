@@ -20,9 +20,12 @@ import {
   getTodayInfo,
   formatFullDate,
 } from "@/lib/hijri-calendar";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 
 export default function Kalender() {
+  useDocumentTitle("Kalender Hijriah");
+
   const today = useMemo(() => new Date(), []);
   const [viewDate, setViewDate] = useState({
     year: today.getFullYear(),
@@ -60,7 +63,10 @@ export default function Kalender() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="kalender-title"
+      >
         <Button
           variant="ghost"
           asChild
@@ -68,14 +74,14 @@ export default function Kalender() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         <section className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <CalendarIcon className="w-7 h-7 text-primary" />
+          <h1 id="kalender-title" className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <CalendarIcon className="w-7 h-7 text-primary" aria-hidden="true" />
             Kalender Hijriah
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -86,7 +92,7 @@ export default function Kalender() {
         {/* Today Widget */}
         <Card className="overflow-hidden border-primary/30 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white mb-5 shadow-xl shadow-emerald-500/20">
           <CardContent className="p-5 sm:p-6 relative">
-            <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 opacity-10" aria-hidden="true">
               <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <pattern
@@ -115,8 +121,12 @@ export default function Kalender() {
                 {todayInfo.hijri.year} H
               </p>
               {todayInfo.holidays.length > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 backdrop-blur-sm">
-                  <Sparkles className="w-4 h-4" />
+                <div
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 backdrop-blur-sm"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Sparkles className="w-4 h-4" aria-hidden="true" />
                   <p className="text-sm font-semibold">
                     {todayInfo.holidays[0].name} 🎉
                   </p>
@@ -132,19 +142,22 @@ export default function Kalender() {
           onValueChange={(v) => setActiveTab(v as "kalender" | "libur")}
           className="space-y-4"
         >
-          <TabsList className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1">
+          <TabsList
+            className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1"
+            aria-label="Pilihan tampilan kalender"
+          >
             <TabsTrigger
               value="kalender"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <CalendarIcon className="w-3.5 h-3.5" />
+              <CalendarIcon className="w-3.5 h-3.5" aria-hidden="true" />
               Kalender
             </TabsTrigger>
             <TabsTrigger
               value="libur"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
               Hari Libur
             </TabsTrigger>
           </TabsList>
@@ -166,6 +179,7 @@ export default function Kalender() {
                     size="sm"
                     onClick={handleToday}
                     className="rounded-full"
+                    aria-label="Kembali ke bulan ini"
                   >
                     Hari Ini
                   </Button>
@@ -181,25 +195,31 @@ export default function Kalender() {
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-primary" />
+                    <div className="w-4 h-4 rounded-md bg-primary" aria-hidden="true" />
                     <span>Hari ini</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200" />
+                    <div
+                      className="w-4 h-4 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200"
+                      aria-hidden="true"
+                    />
                     <span>Jumat</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-muted" />
+                    <div className="w-4 h-4 rounded-md bg-muted" aria-hidden="true" />
                     <span>Weekend</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-emerald-500/15 ring-1 ring-emerald-500/30" />
+                    <div
+                      className="w-4 h-4 rounded-md bg-emerald-500/15 ring-1 ring-emerald-500/30"
+                      aria-hidden="true"
+                    />
                     <span>Hari besar</span>
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-border/40 text-[11px] text-muted-foreground leading-relaxed">
                   <p className="flex items-start gap-1.5">
-                    <Moon className="w-3 h-3 mt-0.5 shrink-0" />
+                    <Moon className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
                     <span>
                       Konversi kalender berdasarkan algoritma <strong>Umm al-Qura</strong>.
                       Tanggal Hijriah dapat berbeda ±1 hari tergantung rukyat lokal.
@@ -217,7 +237,10 @@ export default function Kalender() {
                 <h2 className="text-base font-bold text-foreground">
                   90 Hari Ke Depan
                 </h2>
-                <span className="text-xs text-muted-foreground font-medium">
+                <span
+                  className="text-xs text-muted-foreground font-medium"
+                  aria-live="polite"
+                >
                   {upcomingEvents.length} hari libur
                 </span>
               </div>

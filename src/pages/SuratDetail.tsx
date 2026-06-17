@@ -20,6 +20,7 @@ import { useLastRead } from "@/hooks/use-last-read";
 import { useReadingStats } from "@/hooks/use-reading-stats";
 import { useAudio } from "@/contexts/audio-context";
 import { useAppSettings } from "@/hooks/use-app-settings";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 
 export default function SuratDetail() {
@@ -34,6 +35,9 @@ export default function SuratDetail() {
   const { settings } = useAppSettings();
   const [activeTab, setActiveTab] = useState<"ayat" | "tafsir">("ayat");
   const [readAyats, setReadAyats] = useState<Set<number>>(new Set());
+
+  // Update document title for SEO + UX (browser tab)
+  useDocumentTitle(data ? `${data.nomor}. ${data.namaLatin}` : undefined);
 
   // Update last read + track surah open when data loads
   useEffect(() => {
@@ -162,7 +166,10 @@ export default function SuratDetail() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="surah-title"
+      >
         {/* Back button */}
         <Button
           variant="ghost"
@@ -171,14 +178,14 @@ export default function SuratDetail() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         {/* Surah Header */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 text-white p-6 sm:p-8 shadow-xl shadow-emerald-500/20 mb-6">
-          <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 opacity-10" aria-hidden="true">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern
@@ -206,8 +213,12 @@ export default function SuratDetail() {
                 onClick={handlePlayToggle}
                 size="sm"
                 className="rounded-full gap-2 shadow-lg bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
+                aria-label={isCurrentPlaying ? "Jeda audio" : "Putar audio murottal"}
               >
-                <Play className={cn("w-3.5 h-3.5", isCurrentPlaying && "animate-pulse")} />
+                <Play
+                  className={cn("w-3.5 h-3.5", isCurrentPlaying && "animate-pulse")}
+                  aria-hidden="true"
+                />
                 {isCurrentPlaying ? "Putar Audio" : "Putar Full"}
               </Button>
             </div>
@@ -217,10 +228,11 @@ export default function SuratDetail() {
                 className="font-arabic text-5xl sm:text-6xl mb-3 leading-tight"
                 dir="rtl"
                 lang="ar"
+                aria-label={`Nama Arab: ${data.nama}`}
               >
                 {data.nama.replace(/^سُورَةُ\s*/, "")}
               </p>
-              <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+              <h1 id="surah-title" className="text-2xl sm:text-3xl font-bold mb-1">
                 {data.namaLatin}
               </h1>
               <p className="text-emerald-50/90 text-sm italic">{data.arti}</p>
@@ -228,12 +240,12 @@ export default function SuratDetail() {
 
             <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs text-emerald-50/90 mb-4">
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                 {data.tempatTurun}
               </span>
-              <span className="w-1 h-1 rounded-full bg-emerald-50/50" />
+              <span className="w-1 h-1 rounded-full bg-emerald-50/50" aria-hidden="true" />
               <span className="inline-flex items-center gap-1.5">
-                <Hash className="w-3.5 h-3.5" />
+                <Hash className="w-3.5 h-3.5" aria-hidden="true" />
                 {data.jumlahAyat} Ayat
               </span>
             </div>
@@ -253,6 +265,7 @@ export default function SuratDetail() {
               className="font-arabic text-3xl text-primary leading-relaxed"
               dir="rtl"
               lang="ar"
+              aria-label="Bismillahirrahmanirrahim"
             >
               بِسْمِ اللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
             </p>
@@ -265,19 +278,22 @@ export default function SuratDetail() {
           onValueChange={(v) => setActiveTab(v as "ayat" | "tafsir")}
           className="mb-4"
         >
-          <TabsList className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1">
+          <TabsList
+            className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1"
+            aria-label="Pilihan tampilan ayat"
+          >
             <TabsTrigger
               value="ayat"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <BookOpen className="w-3.5 h-3.5" />
+              <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
               Ayat
             </TabsTrigger>
             <TabsTrigger
               value="tafsir"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <ScrollText className="w-3.5 h-3.5" />
+              <ScrollText className="w-3.5 h-3.5" aria-hidden="true" />
               Tafsir
             </TabsTrigger>
           </TabsList>

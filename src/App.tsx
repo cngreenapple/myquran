@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
-      retry: 2,
+      retry: 1,
     },
   },
 });
@@ -31,6 +31,7 @@ const Dzikir = lazy(() => import("./pages/Dzikir"));
 const Doa = lazy(() => import("./pages/Doa"));
 const AsmaulHusna = lazy(() => import("./pages/AsmaulHusna"));
 const Kalender = lazy(() => import("./pages/Kalender"));
+const Bookmark = lazy(() => import("./pages/Bookmark"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => (
@@ -67,6 +68,7 @@ const App = () => (
                         <Route path="/doa" element={<Doa />} />
                         <Route path="/asmaul-husna" element={<AsmaulHusna />} />
                         <Route path="/kalender" element={<Kalender />} />
+                        <Route path="/bookmark" element={<Bookmark />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

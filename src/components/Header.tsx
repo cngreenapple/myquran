@@ -7,32 +7,51 @@ import {
   BookHeart,
   Hand,
   Calendar,
+  Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const navItems = [
-  { to: "/", label: "Beranda", icon: Home },
-  { to: "/jadwal-sholat", label: "Sholat", icon: Clock },
-  { to: "/dzikir", label: "Dzikir", icon: BookHeart },
-  { to: "/doa", label: "Doa", icon: Hand },
-  { to: "/kalender", label: "Kalender", icon: Calendar },
-  { to: "/settings", label: "Setting", icon: SettingsIcon },
+  { to: "/", label: "Beranda", icon: Home, ariaLabel: "Halaman utama" },
+  { to: "/jadwal-sholat", label: "Sholat", icon: Clock, ariaLabel: "Jadwal sholat" },
+  { to: "/dzikir", label: "Dzikir", icon: BookHeart, ariaLabel: "Dzikir pagi dan petang" },
+  { to: "/doa", label: "Doa", icon: Hand, ariaLabel: "Kumpulan doa" },
+  { to: "/kalender", label: "Kalender", icon: Calendar, ariaLabel: "Kalender Hijriah" },
+  { to: "/bookmark", label: "Bookmark", icon: Bookmark, ariaLabel: "Ayat-ayat yang di-bookmark" },
+  { to: "/settings", label: "Setting", icon: SettingsIcon, ariaLabel: "Pengaturan aplikasi" },
 ];
 
 // Mobile shows 5 most-used; Settings is in header (top-right hamburger)
-const mobileNavItems = navItems.slice(0, 5);
+// Mobile slot: Beranda, Sholat, Doa, Bookmark, Kalender
+const mobileNavItems = [
+  navItems[0], // Beranda
+  navItems[1], // Sholat
+  navItems[3], // Doa
+  navItems[5], // Bookmark
+  navItems[4], // Kalender
+];
 
 export function Header() {
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+      <header
+        className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70"
+        role="banner"
+      >
         <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 max-w-5xl">
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group"
+            aria-label="Al-Quran Digital Indonesia - Halaman utama"
+          >
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl blur-md opacity-40 group-hover:opacity-60 transition-opacity" />
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl blur-md opacity-40 group-hover:opacity-60 transition-opacity"
+                aria-hidden="true"
+              />
               <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} />
+                <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden="true" />
               </div>
             </div>
             <div className="hidden sm:block">
@@ -46,7 +65,10 @@ export function Header() {
           </Link>
 
           {/* Desktop Nav - scrollable on smaller screens */}
-          <nav className="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar">
+          <nav
+            className="hidden lg:flex items-center gap-1 overflow-x-auto no-scrollbar"
+            aria-label="Menu navigasi utama"
+          >
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -62,9 +84,15 @@ export function Header() {
                         : "text-muted-foreground hover:text-foreground hover:bg-muted",
                     )
                   }
+                  aria-label={item.ariaLabel}
                 >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      <Icon className="w-4 h-4" aria-hidden="true" />
+                      {item.label}
+                      {isActive && <span className="sr-only"> (halaman aktif)</span>}
+                    </>
+                  )}
                 </NavLink>
               );
             })}
@@ -81,9 +109,9 @@ export function Header() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )
               }
-              aria-label="Settings"
+              aria-label="Buka pengaturan"
             >
-              <SettingsIcon className="w-4 h-4" />
+              <SettingsIcon className="w-4 h-4" aria-hidden="true" />
             </NavLink>
             <ThemeSwitcher />
           </div>
@@ -99,7 +127,10 @@ export function Header() {
 function BottomNav() {
   const location = useLocation();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border/60 bg-background/95 backdrop-blur-xl pb-safe">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border/60 bg-background/95 backdrop-blur-xl pb-safe"
+      aria-label="Menu navigasi bawah"
+    >
       <div className="grid grid-cols-5 gap-0.5 p-1.5 max-w-2xl mx-auto">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
@@ -118,6 +149,8 @@ function BottomNav() {
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground active:scale-95",
               )}
+              aria-label={item.ariaLabel}
+              aria-current={isActive ? "page" : undefined}
             >
               <Icon
                 className={cn(
@@ -125,6 +158,7 @@ function BottomNav() {
                   isActive && "scale-110",
                 )}
                 strokeWidth={isActive ? 2.5 : 2}
+                aria-hidden="true"
               />
               <span
                 className={cn(

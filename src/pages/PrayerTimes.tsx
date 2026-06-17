@@ -22,11 +22,14 @@ import { QiblaCompass } from "@/components/QiblaCompass";
 import { ErrorState } from "@/components/ErrorState";
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useLastRead } from "@/hooks/use-last-read";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { formatCountdown, formatHijriId, PRAYER_METHODS } from "@/lib/prayer-times";
 import { showError, showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
 export default function PrayerTimes() {
+  useDocumentTitle("Jadwal Sholat & Kiblat");
+
   const {
     schedule,
     prayerList,
@@ -59,7 +62,10 @@ export default function PrayerTimes() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="prayer-title"
+      >
         <Button
           variant="ghost"
           asChild
@@ -67,14 +73,14 @@ export default function PrayerTimes() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         <section className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <Clock className="w-7 h-7 text-primary" />
+          <h1 id="prayer-title" className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Clock className="w-7 h-7 text-primary" aria-hidden="true" />
             Jadwal Sholat
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -83,11 +89,14 @@ export default function PrayerTimes() {
         </section>
 
         {/* Location Card */}
-        <section className="mb-5">
+        <section className="mb-5" aria-label="Lokasi saat ini">
           <Card className="border-border/60 overflow-hidden">
             <CardContent className="p-4 sm:p-5">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20">
+                <div
+                  className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/20"
+                  aria-hidden="true"
+                >
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -109,15 +118,18 @@ export default function PrayerTimes() {
                   aria-label="Refresh lokasi"
                 >
                   {isFetchingLocation ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                   ) : (
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-4 h-4" aria-hidden="true" />
                   )}
                 </Button>
               </div>
               {locationError && (
-                <div className="mt-3 flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <div
+                  className="mt-3 flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl"
+                  role="alert"
+                >
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                   <span>{locationError}</span>
                 </div>
               )}
@@ -127,19 +139,22 @@ export default function PrayerTimes() {
 
         {/* Tabs: Jadwal / Kiblat */}
         <Tabs defaultValue="schedule" className="space-y-4">
-          <TabsList className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1">
+          <TabsList
+            className="grid w-full max-w-sm mx-auto grid-cols-2 h-11 rounded-full bg-muted p-1"
+            aria-label="Pilihan tampilan"
+          >
             <TabsTrigger
               value="schedule"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
               Jadwal
             </TabsTrigger>
             <TabsTrigger
               value="qibla"
               className="rounded-full gap-1.5 data-[state=active]:bg-card data-[state=active]:shadow-sm"
             >
-              <Compass className="w-3.5 h-3.5" />
+              <Compass className="w-3.5 h-3.5" aria-hidden="true" />
               Kiblat
             </TabsTrigger>
           </TabsList>
@@ -147,7 +162,7 @@ export default function PrayerTimes() {
           {/* Schedule Tab */}
           <TabsContent value="schedule" className="space-y-4 animate-fade-in">
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-3" aria-busy="true" aria-label="Memuat jadwal">
                 <div className="h-32 rounded-3xl bg-muted/50 animate-pulse" />
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="h-16 rounded-2xl bg-muted/50 animate-pulse" />
@@ -161,7 +176,7 @@ export default function PrayerTimes() {
               />
             ) : !schedule ? (
               <div className="text-center py-12 text-muted-foreground">
-                <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin" />
+                <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin" aria-hidden="true" />
                 <p>Memuat jadwal...</p>
               </div>
             ) : (
@@ -170,7 +185,7 @@ export default function PrayerTimes() {
                 {nextPrayer && (
                   <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent overflow-hidden">
                     <CardContent className="p-5 sm:p-6 relative">
-                      <div className="absolute top-3 right-3">
+                      <div className="absolute top-3 right-3" aria-hidden="true">
                         <Sun className="w-5 h-5 text-emerald-500/40" />
                       </div>
                       <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">
@@ -189,6 +204,7 @@ export default function PrayerTimes() {
                           <p
                             className="text-2xl sm:text-3xl font-bold font-mono text-emerald-600 dark:text-emerald-400 tabular-nums"
                             aria-live="polite"
+                            aria-atomic="true"
                           >
                             {formatCountdown(countdownMs)}
                           </p>
@@ -198,7 +214,15 @@ export default function PrayerTimes() {
                         </div>
                       </div>
                       {/* Progress bar */}
-                      <div className="h-1 bg-emerald-500/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-1 bg-emerald-500/20 rounded-full overflow-hidden"
+                        role="progressbar"
+                        aria-valuenow={Math.round(
+                          (countdownMs % (60 * 60 * 1000 * 6)) / (60 * 60 * 1000 * 6) * 100,
+                        )}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
                         <div
                           className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-1000"
                           style={{
@@ -212,30 +236,35 @@ export default function PrayerTimes() {
 
                 {/* Hijri Date */}
                 <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-2xl bg-muted/40 border border-border/40">
-                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                   <p className="text-xs text-muted-foreground font-medium">
                     {formatHijriId(schedule.hijriDate)}
                   </p>
                 </div>
 
                 {/* Prayer List */}
-                <div className="space-y-2">
+                <ul className="space-y-2" role="list" aria-label="Daftar waktu sholat">
                   {prayerList.map((prayer) => (
-                    <PrayerCard
-                      key={prayer.name}
-                      prayer={prayer}
-                      isNext={prayer.isNext}
-                    />
+                    <li key={prayer.name}>
+                      <PrayerCard
+                        prayer={prayer}
+                        isNext={prayer.isNext}
+                      />
+                    </li>
                   ))}
-                </div>
+                </ul>
 
                 {/* Method Selector */}
                 <Card className="border-border/60">
                   <CardContent className="p-4">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+                    <label
+                      htmlFor="prayer-method"
+                      className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 block"
+                    >
                       Metode Kalkulasi
-                    </p>
+                    </label>
                     <select
+                      id="prayer-method"
                       value={method}
                       onChange={(e) => setMethod(Number(e.target.value))}
                       className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
@@ -252,14 +281,14 @@ export default function PrayerTimes() {
                 {/* Sun times */}
                 <div className="grid grid-cols-2 gap-2 text-center">
                   <div className="px-3 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30">
-                    <Sun className="w-3.5 h-3.5 mx-auto mb-1 text-amber-600" />
+                    <Sun className="w-3.5 h-3.5 mx-auto mb-1 text-amber-600" aria-hidden="true" />
                     <p className="text-xs text-muted-foreground">Terbit</p>
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {schedule.timings.Sunrise}
                     </p>
                   </div>
                   <div className="px-3 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-900/30">
-                    <Moon className="w-3.5 h-3.5 mx-auto mb-1 text-indigo-600" />
+                    <Moon className="w-3.5 h-3.5 mx-auto mb-1 text-indigo-600" aria-hidden="true" />
                     <p className="text-xs text-muted-foreground">Terbenam</p>
                     <p className="text-sm font-bold text-foreground tabular-nums">
                       {schedule.timings.Sunset}

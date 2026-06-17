@@ -1,7 +1,10 @@
 import { memo, forwardRef } from "react";
+import { Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "./BookmarkButton";
 import type { Ayat } from "@/types/quran";
+import { shareVerseNative } from "@/utils/share";
 import { cn } from "@/lib/utils";
 
 interface VerseCardProps {
@@ -46,6 +49,14 @@ export const VerseCard = memo(
     const tafsirText = ayat.tafsir?.kemenag?.teks;
     const arabicClass = arabicSizeMap[arabicFontSize];
     const translationClass = translationSizeMap[translationFontSize];
+
+    const handleShare = async () => {
+      await shareVerseNative({
+        surahNumber,
+        surahName,
+        ayat,
+      });
+    };
 
     return (
       <Card
@@ -133,6 +144,17 @@ export const VerseCard = memo(
                   surahName={surahName}
                   ayat={ayat}
                 />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  type="button"
+                  className="gap-1.5 rounded-full text-muted-foreground hover:text-foreground"
+                  aria-label="Bagikan ayat"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="text-xs font-medium">Bagikan</span>
+                </Button>
               </div>
             </div>
           </div>

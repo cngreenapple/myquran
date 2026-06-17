@@ -7,11 +7,14 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { AsmaulHusnaCard } from "@/components/AsmaulHusnaCard";
 import { AsmaulHusnaDetailDialog } from "@/components/AsmaulHusnaDetailDialog";
 import { ASMAUL_HUSNA } from "@/data/asmaul-husna";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
 
 export default function AsmaulHusna() {
+  useDocumentTitle("Asmaul Husna");
+
   const [query, setQuery] = useState("");
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -58,7 +61,10 @@ export default function AsmaulHusna() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="asma-title"
+      >
         <Button
           variant="ghost"
           asChild
@@ -66,14 +72,14 @@ export default function AsmaulHusna() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         <section className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <Sparkles className="w-7 h-7 text-amber-500" />
+          <h1 id="asma-title" className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="w-7 h-7 text-amber-500" aria-hidden="true" />
             Asmaul Husna
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -84,8 +90,15 @@ export default function AsmaulHusna() {
         {/* Search & View Toggle */}
         <div className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <label htmlFor="asma-search" className="sr-only">
+              Cari asmaul husna
+            </label>
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+              aria-hidden="true"
+            />
             <input
+              id="asma-search"
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -93,7 +106,11 @@ export default function AsmaulHusna() {
               className="w-full pl-10 pr-4 py-2.5 text-sm rounded-2xl border border-border/60 bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="flex p-1 rounded-2xl bg-muted shrink-0">
+          <div
+            className="flex p-1 rounded-2xl bg-muted shrink-0"
+            role="group"
+            aria-label="Mode tampilan"
+          >
             <button
               onClick={() => setViewMode("grid")}
               className={cn(
@@ -102,9 +119,10 @@ export default function AsmaulHusna() {
                   ? "bg-card shadow-sm text-foreground"
                   : "text-muted-foreground",
               )}
-              aria-label="Grid view"
+              aria-label="Tampilan grid"
+              aria-pressed={viewMode === "grid"}
             >
-              <Grid3x3 className="w-4 h-4" />
+              <Grid3x3 className="w-4 h-4" aria-hidden="true" />
             </button>
             <button
               onClick={() => setViewMode("list")}
@@ -114,15 +132,16 @@ export default function AsmaulHusna() {
                   ? "bg-card shadow-sm text-foreground"
                   : "text-muted-foreground",
               )}
-              aria-label="List view"
+              aria-label="Tampilan daftar"
+              aria-pressed={viewMode === "list"}
             >
-              <ListIcon className="w-4 h-4" />
+              <ListIcon className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* Results count */}
-        <p className="text-xs text-muted-foreground mb-3 px-1">
+        <p className="text-xs text-muted-foreground mb-3 px-1" aria-live="polite">
           {filteredAsma.length} dari 99 nama
         </p>
 
@@ -132,7 +151,11 @@ export default function AsmaulHusna() {
             <p className="text-muted-foreground">Tidak ada nama yang ditemukan</p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 animate-fade-in">
+          <div
+            className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 animate-fade-in"
+            role="list"
+            aria-label="Daftar Asmaul Husna"
+          >
             {filteredAsma.map((asma) => (
               <AsmaulHusnaCard
                 key={asma.number}
@@ -143,15 +166,16 @@ export default function AsmaulHusna() {
             ))}
           </div>
         ) : (
-          <div className="space-y-2 animate-fade-in">
+          <ul className="space-y-2 animate-fade-in" role="list">
             {filteredAsma.map((asma) => (
-              <AsmaulHusnaCard
-                key={asma.number}
-                asma={asma}
-                onClick={() => handleSelect(asma.number)}
-              />
+              <li key={asma.number}>
+                <AsmaulHusnaCard
+                  asma={asma}
+                  onClick={() => handleSelect(asma.number)}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
         <AsmaulHusnaDetailDialog

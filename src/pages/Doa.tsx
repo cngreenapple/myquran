@@ -6,10 +6,13 @@ import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { DoaCard } from "@/components/DoaCard";
 import { DOA_CATEGORIES, DOA_ITEMS, getDoaByCategory } from "@/data/doa";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import { cn } from "@/lib/utils";
 import type { DoaCategory } from "@/types/dzikir";
 
 export default function Doa() {
+  useDocumentTitle("Kumpulan Doa");
+
   const [activeCategory, setActiveCategory] = useState<DoaCategory | "all">("all");
   const [query, setQuery] = useState("");
 
@@ -31,7 +34,10 @@ export default function Doa() {
     <div className="min-h-screen bg-background bg-mesh dark:bg-mesh-dark">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl">
+      <main
+        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
+        aria-labelledby="doa-title"
+      >
         <Button
           variant="ghost"
           asChild
@@ -39,14 +45,14 @@ export default function Doa() {
           size="sm"
         >
           <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Kembali
           </Link>
         </Button>
 
         <section className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <Hand className="w-7 h-7 text-primary" />
+          <h1 id="doa-title" className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
+            <Hand className="w-7 h-7 text-primary" aria-hidden="true" />
             Kumpulan Doa
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -56,9 +62,13 @@ export default function Doa() {
 
         {/* Search */}
         <div className="mb-4">
+          <label htmlFor="doa-search" className="sr-only">
+            Cari doa
+          </label>
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
             <input
+              id="doa-search"
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -69,10 +79,16 @@ export default function Doa() {
         </div>
 
         {/* Category Filter */}
-        <div className="mb-5 -mx-4 px-4 overflow-x-auto no-scrollbar">
+        <div
+          className="mb-5 -mx-4 px-4 overflow-x-auto no-scrollbar"
+          role="tablist"
+          aria-label="Filter kategori doa"
+        >
           <div className="flex gap-2 pb-2 min-w-max">
             <button
               onClick={() => setActiveCategory("all")}
+              role="tab"
+              aria-selected={activeCategory === "all"}
               className={cn(
                 "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border-2",
                 activeCategory === "all"
@@ -86,6 +102,8 @@ export default function Doa() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
+                role="tab"
+                aria-selected={activeCategory === cat.id}
                 className={cn(
                   "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border-2",
                   activeCategory === cat.id
@@ -100,7 +118,7 @@ export default function Doa() {
         </div>
 
         {/* Results count */}
-        <p className="text-xs text-muted-foreground mb-3 px-1">
+        <p className="text-xs text-muted-foreground mb-3 px-1" aria-live="polite">
           {filteredDoas.length} doa
         </p>
 
@@ -110,11 +128,13 @@ export default function Doa() {
             <p className="text-muted-foreground">Tidak ada doa yang ditemukan</p>
           </div>
         ) : (
-          <div className="space-y-3 animate-fade-in">
+          <ul className="space-y-3 animate-fade-in" role="list">
             {filteredDoas.map((doa) => (
-              <DoaCard key={doa.id} doa={doa} />
+              <li key={doa.id}>
+                <DoaCard doa={doa} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </main>
 
