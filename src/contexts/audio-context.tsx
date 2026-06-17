@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSurahList, findWorkingAudioUrl } from "@/lib/api";
+import { broadcastStop, subscribeToStop } from "@/lib/audio-coordinator";
 
 interface AudioContextValue {
   currentSurah: number | null;
@@ -146,9 +147,25 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     };
   }, [currentSurah, surahList]);
 
+  // Subscribe to coordination events - pause when ayat audio starts
+  useEffect(() => {
+    const unsubscribe = subscribeToStop((event) => {
+      if (event.mode !== "surah" && currentSurah !== null) {
+        const audio = audioRef.current;
+        if (audio && !audio.paused) {
+          audio.pause();
+        }
+      }
+    });
+    return unsubscribe;
+  }, [currentSurah]);
+
   const play = useCallback(async (surahNumber: number, surahName: string) => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Broadcast stop ke audio mode lain (ayat)
+    broadcastStop("surah", `${surahNumber}`);
 
     const token = ++playTokenRef.current;
     setCurrentSurah(surahNumber);

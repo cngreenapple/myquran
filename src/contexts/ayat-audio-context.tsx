@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { getAyatAudioUrl, getAyatAudioSources, findWorkingAyatAudioUrl } from "@/lib/api";
+import { broadcastStop, subscribeToStop } from "@/lib/audio-coordinator";
 
 interface AyatAudioState {
   surahNumber: number;
@@ -125,9 +126,25 @@ export function AyatAudioProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Subscribe to coordination events - pause when surah audio starts
+  useEffect(() => {
+    const unsubscribe = subscribeToStop((event) => {
+      if (event.mode !== "ayat" && currentAyat !== null) {
+        const audio = audioRef.current;
+        if (audio && !audio.paused) {
+          audio.pause();
+        }
+      }
+    });
+    return unsubscribe;
+  }, [currentAyat]);
+
   const playAyat = useCallback(async (surahNumber: number, ayatNumber: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Broadcast stop ke audio mode lain (surah)
+    broadcastStop("ayat", `${surahNumber}:${ayatNumber}`);
 
     const token = ++playTokenRef.current;
     setIsLoading(true);
