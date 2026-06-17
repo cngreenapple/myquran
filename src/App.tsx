@@ -23,6 +23,7 @@ const queryClient = new QueryClient({
 const Index = lazy(() => import("./pages/Index"));
 const SuratDetail = lazy(() => import("./pages/SuratDetail"));
 const Settings = lazy(() => import("./pages/Settings"));
+const PrayerTimes = lazy(() => import("./pages/PrayerTimes"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => (
@@ -51,6 +52,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/surat/:id" element={<SuratDetail />} />
+                  <Route path="/jadwal-sholat" element={<PrayerTimes />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

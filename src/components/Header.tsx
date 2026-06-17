@@ -1,10 +1,11 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { BookOpen, Home, Settings as SettingsIcon } from "lucide-react";
+import { BookOpen, Home, Settings as SettingsIcon, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const navItems = [
   { to: "/", label: "Beranda", icon: Home },
+  { to: "/jadwal-sholat", label: "Sholat", icon: Clock },
   { to: "/settings", label: "Pengaturan", icon: SettingsIcon },
 ];
 
@@ -70,7 +71,7 @@ function BottomNav() {
   const location = useLocation();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border/60 bg-background/95 backdrop-blur-xl pb-safe">
-      <div className="grid grid-cols-2 gap-1 p-2 max-w-md mx-auto">
+      <div className="grid grid-cols-3 gap-1 p-2 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =

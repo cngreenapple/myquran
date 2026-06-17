@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Search, BookOpen, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, BookOpen, Sparkles, Clock } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
 import { SurahCard } from "@/components/SurahCard";
@@ -8,6 +9,7 @@ import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useSurahList } from "@/hooks/use-surah-list";
+import { Button } from "@/components/ui/button";
 
 export default function Index() {
   const [query, setQuery] = useState("");
@@ -57,16 +59,29 @@ export default function Index() {
               </svg>
             </div>
             <div className="relative">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider mb-3">
-                <Sparkles className="w-3 h-3" />
-                Al-Qur'an Digital
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[10px] font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3" />
+                  Al-Qur'an Digital
+                </div>
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="rounded-full gap-1.5 bg-white/15 hover:bg-white/25 text-white border border-white/20 backdrop-blur-sm"
+                >
+                  <Link to="/jadwal-sholat">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-xs font-semibold">Jadwal Sholat</span>
+                  </Link>
+                </Button>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold mb-2 leading-tight">
                 Baca Al-Qur'an di Mana Saja
               </h1>
               <p className="text-sm sm:text-base text-emerald-50/90 max-w-md leading-relaxed">
                 114 surah dengan terjemahan Bahasa Indonesia, audio murottal,
-                dan fitur bookmark untuk kenyamanan membaca Anda.
+                jadwal sholat, dan arah kiblat.
               </p>
             </div>
           </div>
