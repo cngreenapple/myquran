@@ -1,35 +1,35 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
-import {
-  BookOpen,
-  Home,
-  Settings as SettingsIcon,
-  Clock,
-  BookHeart,
-  Hand,
-  Calendar,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Link, useNavigate } from "react-router-dom";
+import { BookOpen, Menu } from "lucide-react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
-const navItems = [
-  { to: "/", label: "Beranda", icon: Home, ariaLabel: "Halaman utama" },
-  { to: "/jadwal-sholat", label: "Sholat", icon: Clock, ariaLabel: "Jadwal sholat" },
-  { to: "/dzikir", label: "Dzikir", icon: BookHeart, ariaLabel: "Dzikir pagi dan petang" },
-  { to: "/doa", label: "Doa", icon: Hand, ariaLabel: "Kumpulan doa" },
-  { to: "/kalender", label: "Kalender", icon: Calendar, ariaLabel: "Kalender Hijriah" },
-  { to: "/settings", label: "Setting", icon: SettingsIcon, ariaLabel: "Pengaturan aplikasi" },
-];
+interface HeaderProps {
+  onMenuClick: () => void;
+}
 
-export function Header() {
+export function Header({ onMenuClick }: HeaderProps) {
+  const navigate = useNavigate();
+
   return (
     <header
       className="sticky top-0 z-40 w-full border-b border-border bg-background"
       role="banner"
     >
       <div className="container mx-auto flex h-14 items-center justify-between gap-2 px-3 max-w-5xl">
+        <button
+          onClick={onMenuClick}
+          className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center transition-colors"
+          aria-label="Buka menu navigasi"
+        >
+          <Menu className="w-5 h-5 text-foreground" />
+        </button>
+
         {/* Logo */}
         <Link
           to="/"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/");
+          }}
           className="flex items-center gap-2 group shrink-0"
           aria-label="Al-Quran Digital Indonesia - Halaman utama"
         >
@@ -52,82 +52,9 @@ export function Header() {
           </div>
         </Link>
 
-        {/* Mobile: Icon-only nav (compact horizontal scroll) */}
-        <nav
-          className="flex md:hidden items-center gap-0.5 overflow-x-auto no-scrollbar flex-1 justify-end"
-          aria-label="Menu navigasi utama"
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  cn(
-                    "shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                  )
-                }
-                aria-label={item.ariaLabel}
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon className="w-4 h-4" aria-hidden="true" />
-                    {isActive && <span className="sr-only"> (halaman aktif)</span>}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* Desktop: Full nav with labels */}
-        <nav
-          className="hidden md:flex items-center gap-1"
-          aria-label="Menu navigasi utama"
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
-                  )
-                }
-                aria-label={item.ariaLabel}
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon className="w-4 h-4" aria-hidden="true" />
-                    {item.label}
-                    {isActive && <span className="sr-only"> (halaman aktif)</span>}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* Theme switcher */}
+        {/* Right: theme */}
         <ThemeSwitcher />
       </div>
     </header>
   );
-}
-
-// BottomNav tetap di-export untuk backward compatibility tapi tidak dipakai
-export function BottomNav() {
-  const location = useLocation();
-  return null;
 }

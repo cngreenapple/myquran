@@ -8,19 +8,20 @@ import { DzikirCounterCard } from "@/components/DzikirCounterCard";
 import { DZIKIR_CATEGORIES, DZIKIR_PAGI, DZIKIR_PETANG } from "@/data/dzikir";
 import { useDzikirCounter } from "@/hooks/use-dzikir-counter";
 import { useDocumentTitle } from "@/hooks/use-document-title";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 
 type DzikirTabId = "pagi" | "petang";
 
-export default function Dzikir() {
-  useDocumentTitle("Dzikir Pagi & Petang");
+interface DzikirProps {
+  onMenuClick: () => void;
+}
 
+export default function Dzikir({ onMenuClick }: DzikirProps) {
+  useDocumentTitle("Dzikir Pagi & Petang");
   const [activeTab, setActiveTab] = useState<DzikirTabId>("pagi");
   const { resetCategory, getCounter } = useDzikirCounter();
-
-  const activeCategory =
-    activeTab === "pagi" ? DZIKIR_PAGI : DZIKIR_PETANG;
+  const activeCategory = activeTab === "pagi" ? DZIKIR_PAGI : DZIKIR_PETANG;
 
   const progress = useMemo(() => {
     const total = activeCategory.items.length;
@@ -32,138 +33,60 @@ export default function Dzikir() {
   }, [activeCategory, getCounter]);
 
   const handleResetCategory = () => {
-    if (!confirm(`Reset seluruh dzikir ${activeCategory.name.toLowerCase()}?`)) {
-      return;
-    }
+    if (!confirm(`Reset seluruh dzikir ${activeCategory.name.toLowerCase()}?`)) return;
     resetCategory(activeCategory.id);
     showSuccess(`${activeCategory.name} direset`);
   };
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
-
-      <main
-        className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl"
-        aria-labelledby="dzikir-title"
-      >
-        <Button
-          variant="ghost"
-          asChild
-          className="mb-4 -ml-2 rounded-full"
-          size="sm"
-        >
-          <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />
-            Kembali
-          </Link>
+      <Header onMenuClick={onMenuClick} />
+      <main className="container mx-auto px-4 py-6 pb-32 md:pb-12 max-w-3xl" aria-labelledby="dzikir-title">
+        <Button variant="ghost" asChild className="mb-4 -ml-2 rounded-full" size="sm">
+          <Link to="/"><ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true" />Kembali</Link>
         </Button>
-
         <section className="mb-6">
           <h1 id="dzikir-title" className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-            <BookHeart className="w-7 h-7 text-primary" aria-hidden="true" />
-            Dzikir
+            <BookHeart className="w-7 h-7 text-primary" aria-hidden="true" />Dzikir
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Wirid pagi dan petang untuk ketenangan hati
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Wirid pagi dan petang untuk ketenangan hati</p>
         </section>
 
-        {/* Tabs: Pagi / Petang */}
-        <div
-          className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-2xl bg-muted"
-          role="tablist"
-          aria-label="Pilih waktu dzikir"
-        >
+        <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-2xl bg-muted" role="tablist" aria-label="Pilih waktu dzikir">
           {DZIKIR_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveTab(cat.id as DzikirTabId)}
-              role="tab"
-              aria-selected={activeTab === cat.id}
-              aria-controls={`panel-${cat.id}`}
-              className={cn(
-                "flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all",
-                activeTab === cat.id
-                  ? "bg-card shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <span className="text-lg" aria-hidden="true">{cat.emoji}</span>
-              {cat.name}
+            <button key={cat.id} onClick={() => setActiveTab(cat.id as DzikirTabId)} role="tab" aria-selected={activeTab === cat.id} aria-controls={`panel-${cat.id}`} className={cn("flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all", activeTab === cat.id ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+              <span className="text-lg" aria-hidden="true">{cat.emoji}</span>{cat.name}
             </button>
           ))}
         </div>
 
-        {/* Progress Card */}
-        <div
-          className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-card to-card p-4 sm:p-5 mb-5"
-          role="status"
-          aria-live="polite"
-        >
+        <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-card to-card p-4 sm:p-5 mb-5" role="status" aria-live="polite">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
-                Progress {activeCategory.name}
-              </p>
-              <p className="text-2xl font-bold text-foreground tabular-nums">
-                {progress.completed} / {progress.total}
-              </p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Progress {activeCategory.name}</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{progress.completed} / {progress.total}</p>
             </div>
             <Sparkles className="w-8 h-8 text-primary/40" aria-hidden="true" />
           </div>
-          <div
-            className="h-2 bg-muted rounded-full overflow-hidden"
-            role="progressbar"
-            aria-valuenow={Math.round(progress.percent)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progress dzikir ${progress.percent.toFixed(0)} persen`}
-          >
-            <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500"
-              style={{ width: `${progress.percent}%` }}
-            />
+          <div className="h-2 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={Math.round(progress.percent)} aria-valuemin={0} aria-valuemax={100} aria-label={`Progress dzikir ${progress.percent.toFixed(0)} persen`}>
+            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500" style={{ width: `${progress.percent}%` }} />
           </div>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground mb-4 text-center">
-          {activeCategory.description}
-        </p>
+        <p className="text-sm text-muted-foreground mb-4 text-center">{activeCategory.description}</p>
 
-        {/* Reset Button */}
         {progress.completed > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleResetCategory}
-            className="mb-4 mx-auto text-destructive hover:text-destructive rounded-full flex"
-            aria-label={`Reset progress dzikir ${activeCategory.name}`}
-          >
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
-            Reset {activeCategory.name}
+          <Button variant="ghost" size="sm" onClick={handleResetCategory} className="mb-4 mx-auto text-destructive hover:text-destructive rounded-full flex" aria-label={`Reset progress dzikir ${activeCategory.name}`}>
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />Reset {activeCategory.name}
           </Button>
         )}
 
-        {/* Dzikir List */}
-        <div
-          className="space-y-3 animate-fade-in"
-          role="tabpanel"
-          id={`panel-${activeCategory.id}`}
-          aria-labelledby={`tab-${activeCategory.id}`}
-        >
+        <div className="space-y-3 animate-fade-in" role="tabpanel" id={`panel-${activeCategory.id}`} aria-labelledby={`tab-${activeCategory.id}`}>
           {activeCategory.items.map((item) => (
-            <DzikirCounterCard
-              key={item.id}
-              categoryId={activeCategory.id}
-              item={item}
-              color={activeCategory.color}
-            />
+            <DzikirCounterCard key={item.id} categoryId={activeCategory.id} item={item} color={activeCategory.color} />
           ))}
         </div>
       </main>
-
       <AudioPlayer />
     </div>
   );

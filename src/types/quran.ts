@@ -35,3 +35,13 @@ export interface LastRead {
   ayatNumber: number;
   timestamp: number;
 }
+
+export interface BookmarkItem {
+  id: string;
+  surahNumber: number;
+  surahName: string;
+  ayatNumber: number;
+  note?: string;
+  previewText?: string;
+  timestamp: number;
+}
