@@ -97,6 +97,10 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     -webkit-font-smoothing: antialiased;
+    /* Bikin stacking context baru di body, sehingga z-index children
+       (Header, Toaster, dll) di-scope ke body. Header z-1000 (via Portal)
+       PASTI di atas Toaster z-100. */
+    isolation: isolate;
   }
 
   /* Arabic text styling */
@@ -126,6 +130,22 @@
       padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
     }
   }
+}
+
+/* Critical: Kosongkan ToastViewport saat tidak ada toast
+   (ToastViewport default punya w-full, top-0, padding 16px = ~32px height)
+   agar tidak block click di area header */
+[data-radix-toast-viewport]:empty {
+  pointer-events: none;
+}
+
+/* Sonner container - default position bottom-right, tapi
+   tetap pastikan tidak block click di area top-left */
+section[data-sonner-toaster] {
+  pointer-events: none;
+}
+section[data-sonner-toaster] > * {
+  pointer-events: auto;
 }
 
 @layer utilities {
