@@ -132,20 +132,34 @@
   }
 }
 
-/* Critical: Kosongkan ToastViewport saat tidak ada toast
-   (ToastViewport default punya w-full, top-0, padding 16px = ~32px height)
-   agar tidak block click di area header */
-[data-radix-toast-viewport]:empty {
-  pointer-events: none;
+/* =============================================
+   CRITICAL FIX: Layered elements blocking header clicks
+   =============================================
+   Root cause analysis:
+   - shadcn Toaster renders <ToastViewport> with position: fixed, top: 0,
+     z-100, w-full, padding 16px. Even when empty, this element occupies
+     ~64px at the top of the viewport and blocks pointer events to the
+     header menu button.
+   - Sonner (used for showSuccess/showError) has z-index 999999.
+   - PWA offline indicator has z-[60] at top: 0.
+
+   Solution: Force pointer-events: none on these "invisible" containers
+   while keeping their children (actual toasts) clickable. */
+
+/* ToastViewport (shadcn) - parent no pointer events, children yes */
+ol[data-radix-toast-viewport] {
+  pointer-events: none !important;
+}
+ol[data-radix-toast-viewport] > * {
+  pointer-events: auto !important;
 }
 
-/* Sonner container - default position bottom-right, tapi
-   tetap pastikan tidak block click di area top-left */
+/* Sonner container */
 section[data-sonner-toaster] {
-  pointer-events: none;
+  pointer-events: none !important;
 }
 section[data-sonner-toaster] > * {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 @layer utilities {
