@@ -119,10 +119,16 @@ export function BottomNav() {
   const location = useLocation();
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border bg-background pb-safe"
+      className="fixed bottom-3 left-3 right-3 z-40 md:hidden animate-fade-in"
       aria-label="Menu navigasi bawah"
     >
-      <div className="grid grid-cols-4 gap-0.5 p-1.5 max-w-2xl mx-auto">
+      <div
+        className={cn(
+          "grid grid-cols-4 gap-1 p-1.5 max-w-md mx-auto",
+          "rounded-full border border-border bg-card/95 backdrop-blur-md",
+          "shadow-lg shadow-black/5",
+        )}
+      >
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -135,9 +141,9 @@ export function BottomNav() {
               to={item.to}
               end={item.to === "/"}
               className={cn(
-                "flex flex-col items-center gap-0.5 py-1.5 rounded-2xl transition-all duration-200",
+                "flex flex-col items-center gap-0.5 py-2 rounded-full transition-all duration-200",
                 isActive
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground active:scale-95",
               )}
               aria-label={item.ariaLabel}
