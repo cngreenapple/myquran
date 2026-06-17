@@ -23,7 +23,9 @@ import { cn } from "@/lib/utils";
 export default function SuratDetail() {
   const { id } = useParams<{ id: string }>();
   const nomor = Number(id);
-  const { data, isLoading, isError, refetch } = useSurahDetail(nomor);
+  const isValidNomor = !isNaN(nomor) && nomor >= 1 && nomor <= 114;
+
+  const { data, isLoading, isError, refetch } = useSurahDetail(isValidNomor ? nomor : 0);
   const { updateLastRead } = useLastRead();
   const { play, currentSurah, togglePlay } = useAudio();
   const [activeTab, setActiveTab] = useState<"ayat" | "tafsir">("ayat");
@@ -45,24 +47,48 @@ export default function SuratDetail() {
     const hash = window.location.hash;
     if (hash.startsWith("#ayat-")) {
       const ayatNum = parseInt(hash.replace("#ayat-", ""));
-      setTimeout(() => {
-        const element = document.getElementById(`ayat-${ayatNum}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 300);
+      if (!isNaN(ayatNum)) {
+        setTimeout(() => {
+          const element = document.getElementById(`ayat-${ayatNum}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 300);
+      }
     }
   }, [data]);
 
   const isCurrentPlaying = currentSurah === nomor;
 
   const handlePlayToggle = () => {
+    if (!data) return;
     if (isCurrentPlaying) {
       togglePlay();
-    } else if (data) {
+    } else {
       play(data.nomor, data.namaLatin);
     }
   };
+
+  if (!isValidNomor) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-6 max-w-3xl">
+          <Button variant="ghost" asChild className="mb-4 -ml-2">
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Kembali
+            </Link>
+          </Button>
+          <ErrorState
+            title="Nomor Surat Tidak Valid"
+            message="Nomor surat harus antara 1 sampai 114. Silakan pilih surat dari daftar."
+          />
+        </main>
+        <AudioPlayer />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -144,9 +170,7 @@ export default function SuratDetail() {
               <Button
                 onClick={handlePlayToggle}
                 size="sm"
-                className={cn(
-                  "rounded-full gap-2 shadow-lg bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm",
-                )}
+                className="rounded-full gap-2 shadow-lg bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
               >
                 <Play className={cn("w-3.5 h-3.5", isCurrentPlaying && "animate-pulse")} />
                 {isCurrentPlaying ? "Putar Audio" : "Putar Full"}
@@ -187,7 +211,7 @@ export default function SuratDetail() {
           </div>
         </section>
 
-        {/* Bismillah - only for surah except Al-Fatihah */}
+        {/* Bismillah - only for surah except Al-Fatihah and At-Taubah */}
         {data.nomor !== 1 && data.nomor !== 9 && (
           <div className="text-center mb-6 py-4 border-y border-border/60">
             <p

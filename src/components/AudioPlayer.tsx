@@ -1,4 +1,4 @@
-import { Play, Pause, X, Volume2, SkipForward, RotateCcw } from "lucide-react";
+import { Play, Pause, X, Volume2, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAudio } from "@/contexts/audio-context";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,6 +14,7 @@ export function AudioPlayer() {
     progress,
     duration,
     error,
+    play,
     togglePlay,
     stop,
     seek,
@@ -25,7 +26,7 @@ export function AudioPlayer() {
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
   const nextSurah = surahList?.find((s) => s.nomor === currentSurah + 1);
-  const hasNext = !!nextSurah;
+  const hasNext = !!nextSurah && currentSurah < 114;
 
   const handleSeekClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -36,13 +37,7 @@ export function AudioPlayer() {
 
   const handleNext = () => {
     if (nextSurah) {
-      stop();
-      // Trigger play via event - simpler: use play directly
-      const audio = document.querySelector("audio");
-      if (audio) {
-        audio.src = `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${nextSurah.nomor}.mp3`;
-        audio.play().catch(console.error);
-      }
+      play(nextSurah.nomor, nextSurah.namaLatin);
     }
   };
 
