@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, useEffect } from "react";
+import { useState, Suspense, lazy, useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,6 +43,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 /**
  * Komponen yang listen route change dan stop semua audio.
+ * Menggunakan ref pattern untuk menghindari re-trigger saat audio state berubah.
  * Harus di dalam BrowserRouter agar bisa pakai useLocation.
  */
 function RouteAudioStopper() {
@@ -50,11 +51,23 @@ function RouteAudioStopper() {
   const surahAudio = useAudio();
   const ayatAudio = useAyatAudio();
 
+  // Simpan reference fungsi stop terbaru di ref
+  const stopSurahRef = useRef(surahAudio.stop);
+  const stopAyatRef = useRef(ayatAudio.stop);
+
   useEffect(() => {
-    // Setiap kali route berubah, stop kedua audio
-    surahAudio.stop();
-    ayatAudio.stop();
-  }, [location.pathname, surahAudio, ayatAudio]);
+    stopSurahRef.current = surahAudio.stop;
+  }, [surahAudio.stop]);
+
+  useEffect(() => {
+    stopAyatRef.current = ayatAudio.stop;
+  }, [ayatAudio.stop]);
+
+  // Hanya re-trigger saat route change
+  useEffect(() => {
+    stopSurahRef.current();
+    stopAyatRef.current();
+  }, [location.pathname]);
 
   return null;
 }
