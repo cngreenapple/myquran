@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,7 +9,7 @@ import {
   ScrollText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Header } from "@/components/Header";
 import { VerseCard } from "@/components/VerseCard";
 import { SurahDetailSkeleton } from "@/components/LoadingSkeleton";
@@ -38,7 +38,7 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
   const { play, currentSurah, togglePlay } = useAudio();
   const { settings } = useAppSettings();
   const [activeTab, setActiveTab] = useState<"ayat" | "tafsir">("ayat");
-  const [readAyats, setReadAyats] = useState<Set<number>>(new Set());
+  const readAyatsRef = useRef<Set<number>>(new Set());
 
   useDocumentTitle(data ? `${data.nomor}. ${data.namaLatin}` : undefined);
 
@@ -56,8 +56,8 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const ayatNum = parseInt(entry.target.id.replace("ayat-", ""), 10);
-            if (!isNaN(ayatNum) && !readAyats.has(ayatNum)) {
-              setReadAyats((prev) => new Set(prev).add(ayatNum));
+            if (!isNaN(ayatNum) && !readAyatsRef.current.has(ayatNum)) {
+              readAyatsRef.current.add(ayatNum);
               trackAyatRead(data.nomor, data.namaLatin, ayatNum);
             }
           }
@@ -68,7 +68,7 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
     const elements = document.querySelectorAll('[id^="ayat-"]');
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [data, readAyats, trackAyatRead]);
+  }, [data, trackAyatRead]);
 
   useEffect(() => {
     if (!data) return;

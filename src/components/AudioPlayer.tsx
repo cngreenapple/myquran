@@ -45,8 +45,8 @@ export function AudioPlayer() {
   return (
     <div
       className={cn(
-        "fixed left-0 right-0 z-50 transition-transform duration-300 ease-out",
-        currentSurah ? "translate-y-0" : "translate-y-full",
+        "fixed left-0 right-0 z-50 transition-transform duration-300 ease-out pointer-events-auto",
+        currentSurah ? "translate-y-0" : "translate-y-full pointer-events-none",
         isMobile ? "bottom-16 px-2 pb-2" : "bottom-3 px-4",
       )}
     >
