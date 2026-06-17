@@ -26,6 +26,22 @@ interface AudioContextValue {
 
 const AudioContext = createContext<AudioContextValue | null>(null);
 
+function getAudioErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.name === "NotAllowedError") {
+      return "Klik tombol play untuk memulai audio (browser memerlukan interaksi).";
+    }
+    if (error.name === "NotSupportedError") {
+      return "Format audio tidak didukung oleh browser.";
+    }
+    if (error.name === "AbortError") {
+      return "Pemutaran audio dibatalkan.";
+    }
+    return error.message || "Gagal memutar audio.";
+  }
+  return "Gagal memutar audio. Silakan coba lagi.";
+}
+
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [currentSurah, setCurrentSurah] = useState<number | null>(null);
@@ -46,10 +62,20 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const audio = new Audio();
     audio.preload = "metadata";
+    audio.crossOrigin = "anonymous";
     audioRef.current = audio;
 
     const onTimeUpdate = () => setProgress(audio.currentTime);
-    const onLoadedMetadata = () => setDuration(audio.duration || 0);
+    const onLoadedMetadata = () => {
+      if (isFinite(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
+    const onDurationChange = () => {
+      if (isFinite(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
     const onPlay = () => {
       setIsPlaying(true);
       setError(null);
@@ -57,69 +83,127 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const onPause = () => setIsPlaying(false);
     const onEnded = () => {
       // Auto-next surah
-      if (currentSurah && currentSurah < 114) {
-        const next = currentSurah + 1;
-        const nextSurahInfo = surahList?.find((s) => s.nomor === next);
-        const nextName = nextSurahInfo?.namaLatin || `Surah ${next}`;
-        play(next, nextName);
-      } else {
-        stop();
-      }
+      setCurrentSurah((prev) => {
+        if (prev && prev < 114) {
+          const next = prev + 1;
+          const nextSurahInfo = surahList?.find((s) => s.nomor === next);
+          const nextName = nextSurahInfo?.namaLatin || `Surah ${next}`;
+          // Use setTimeout to avoid setState during render
+          setTimeout(() => play(next, nextName), 0);
+          return prev; // Keep current until play() updates it
+        }
+        setTimeout(() => stop(), 0);
+        return prev;
+      });
     };
     const onError = () => {
-      setError("Gagal memuat audio. Silakan coba lagi.");
+      const mediaError = audio.error;
+      let message = "Gagal memuat audio.";
+      if (mediaError) {
+        switch (mediaError.code) {
+          case 1: // MEDIA_ERR_ABORTED
+            message = "Pemutaran audio dibatalkan.";
+            break;
+          case 2: // MEDIA_ERR_NETWORK
+            message = "Gagal memuat audio. Periksa koneksi internet Anda.";
+            break;
+          case 3: // MEDIA_ERR_DECODE
+            message = "Format audio tidak dapat diputar.";
+            break;
+          case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+            message = "Sumber audio tidak didukung atau tidak ditemukan.";
+            break;
+        }
+      }
+      console.error("[Audio Error]", { code: mediaError?.code, message });
+      setError(message);
       setIsPlaying(false);
     };
-    const onWaiting = () => setError(null);
+    const onStalled = () => {
+      // Audio stalled - buffering
+    };
+    const onCanPlay = () => {
+      setError(null);
+    };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("durationchange", onDurationChange);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onError);
-    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("stalled", onStalled);
+    audio.addEventListener("canplay", onCanPlay);
 
     return () => {
       audio.pause();
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("durationchange", onDurationChange);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
-      audio.removeEventListener("waiting", onWaiting);
-      audio.src = "";
+      audio.removeEventListener("stalled", onStalled);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeAttribute("src");
+      audio.load();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSurah, surahList]);
+  }, [surahList]);
 
   const play = useCallback((surahNumber: number, surahName: string) => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      console.error("[Audio] Audio element not initialized");
+      return;
+    }
     const url = getAudioUrl(surahNumber);
+    console.log(`[Audio] Playing surah ${surahNumber}: ${surahName}`, url);
     setCurrentSurah(surahNumber);
     setCurrentSurahName(surahName);
     setAudioUrl(url);
     setProgress(0);
     setDuration(0);
     setError(null);
+
+    // Set src and load
     audio.src = url;
     audio.load();
-    audio.play().catch((err) => {
-      console.error("Audio play failed:", err);
-      setError("Gagal memutar audio. Periksa koneksi Anda.");
-    });
+
+    // Attempt to play - must be in response to user interaction
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log(`[Audio] Successfully started surah ${surahNumber}`);
+        })
+        .catch((err) => {
+          console.error("[Audio play failed]", {
+            name: err?.name,
+            message: err?.message,
+            code: err?.code,
+            surah: surahNumber,
+          });
+          setError(getAudioErrorMessage(err));
+          setIsPlaying(false);
+        });
+    }
   }, []);
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     if (audio.paused) {
-      audio.play().catch((err) => {
-        console.error("Audio play failed:", err);
-        setError("Gagal memutar audio.");
-      });
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.error("[Audio togglePlay failed]", err);
+          setError(getAudioErrorMessage(err));
+          setIsPlaying(false);
+        });
+      }
     } else {
       audio.pause();
     }
