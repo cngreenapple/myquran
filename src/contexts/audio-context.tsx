@@ -42,8 +42,20 @@ function getAudioErrorMessage(error: unknown): string {
   return "Gagal memutar audio. Silakan coba lagi.";
 }
 
+// Daftar CDN fallback untuk audio murottal
+const AUDIO_FALLBACK_URLS = [
+  // equran.id - biasanya paling reliable untuk Indonesia
+  (n: number) => `https://equran.id/media/audio/full/ar.alafasy/${n}.mp3`,
+  // Islamic Network
+  (n: number) => `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${n}.mp3`,
+  // Archive.org
+  (n: number) => `https://archive.org/download/Alafasy_128/${n.toString().padStart(3, "0")}.mp3`,
+];
+
 export function AudioProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fallbackIndexRef = useRef(0);
+  const playPromiseRef = useRef<Promise<void> | null>(null);
   const [currentSurah, setCurrentSurah] = useState<number | null>(null);
   const [currentSurahName, setCurrentSurahName] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
@@ -88,9 +100,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
           const next = prev + 1;
           const nextSurahInfo = surahList?.find((s) => s.nomor === next);
           const nextName = nextSurahInfo?.namaLatin || `Surah ${next}`;
-          // Use setTimeout to avoid setState during render
           setTimeout(() => play(next, nextName), 0);
-          return prev; // Keep current until play() updates it
+          return prev;
         }
         setTimeout(() => stop(), 0);
         return prev;
@@ -98,29 +109,46 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     };
     const onError = () => {
       const mediaError = audio.error;
+      console.error("[Audio Error]", {
+        code: mediaError?.code,
+        message: mediaError?.message,
+        surah: currentSurah,
+        src: audio.src,
+      });
+
+      // Try fallback URLs if not exhausted
+      if (currentSurah && fallbackIndexRef.current < AUDIO_FALLBACK_URLS.length - 1) {
+        fallbackIndexRef.current += 1;
+        const nextUrl = AUDIO_FALLBACK_URLS[fallbackIndexRef.current](currentSurah);
+        console.log(`[Audio] Trying fallback ${fallbackIndexRef.current}: ${nextUrl}`);
+        setAudioUrl(nextUrl);
+        audio.src = nextUrl;
+        audio.load();
+        audio.play().catch((err) => {
+          console.error("[Audio fallback play failed]", err);
+        });
+        return;
+      }
+
       let message = "Gagal memuat audio.";
       if (mediaError) {
         switch (mediaError.code) {
-          case 1: // MEDIA_ERR_ABORTED
+          case 1:
             message = "Pemutaran audio dibatalkan.";
             break;
-          case 2: // MEDIA_ERR_NETWORK
+          case 2:
             message = "Gagal memuat audio. Periksa koneksi internet Anda.";
             break;
-          case 3: // MEDIA_ERR_DECODE
+          case 3:
             message = "Format audio tidak dapat diputar.";
             break;
-          case 4: // MEDIA_ERR_SRC_NOT_SUPPORTED
+          case 4:
             message = "Sumber audio tidak didukung atau tidak ditemukan.";
             break;
         }
       }
-      console.error("[Audio Error]", { code: mediaError?.code, message });
       setError(message);
       setIsPlaying(false);
-    };
-    const onStalled = () => {
-      // Audio stalled - buffering
     };
     const onCanPlay = () => {
       setError(null);
@@ -133,7 +161,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("error", onError);
-    audio.addEventListener("stalled", onStalled);
     audio.addEventListener("canplay", onCanPlay);
 
     return () => {
@@ -145,13 +172,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
-      audio.removeEventListener("stalled", onStalled);
       audio.removeEventListener("canplay", onCanPlay);
       audio.removeAttribute("src");
       audio.load();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [surahList]);
+  }, [currentSurah, surahList]);
 
   const play = useCallback((surahNumber: number, surahName: string) => {
     const audio = audioRef.current;
@@ -159,7 +185,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       console.error("[Audio] Audio element not initialized");
       return;
     }
-    const url = getAudioUrl(surahNumber);
+    fallbackIndexRef.current = 0;
+    const url = AUDIO_FALLBACK_URLS[0](surahNumber);
     console.log(`[Audio] Playing surah ${surahNumber}: ${surahName}`, url);
     setCurrentSurah(surahNumber);
     setCurrentSurahName(surahName);
@@ -168,12 +195,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     setDuration(0);
     setError(null);
 
-    // Set src and load
     audio.src = url;
     audio.load();
 
-    // Attempt to play - must be in response to user interaction
     const playPromise = audio.play();
+    playPromiseRef.current = playPromise;
     if (playPromise !== undefined) {
       playPromise
         .then(() => {
@@ -197,6 +223,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (!audio) return;
     if (audio.paused) {
       const playPromise = audio.play();
+      playPromiseRef.current = playPromise;
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
           console.error("[Audio togglePlay failed]", err);

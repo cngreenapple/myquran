@@ -32,9 +32,27 @@ export async function fetchSurahDetail(nomor: number): Promise<SurahDetail> {
   return data.data;
 }
 
-// Audio dari AlQuran Cloud CDN untuk full surah
+// Audio murottal dari beberapa CDN dengan fallback otomatis
+const AUDIO_CDNS = [
+  // Primary - AlQuran Cloud CDN
+  (n: number) => `https://cdn.alquran.cloud/media/audio/ayah/ar.alafasy/${n}/full`,
+  // Fallback 1 - equran.id
+  (n: number) => `https://equran.id/media/audio/full/ar.alafasy/${n}.mp3`,
+  // Fallback 2 - Islamic Network
+  (n: number) => `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${n}.mp3`,
+];
+
+// Backward compatible - returns primary URL
 export function getAudioUrl(nomor: number): string {
-  return `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${nomor}.mp3`;
+  return AUDIO_CDNS[0](nomor);
+}
+
+// Returns all fallback URLs for audio element
+export function getAudioSources(nomor: number): { src: string; type: string }[] {
+  return [
+    { src: `https://equran.id/media/audio/full/ar.alafasy/${nomor}.mp3`, type: "audio/mpeg" },
+    { src: `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${nomor}.mp3`, type: "audio/mpeg" },
+  ];
 }
 
 export function formatDuration(seconds: number): string {
