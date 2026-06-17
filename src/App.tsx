@@ -11,6 +11,7 @@ import { ReadingStatsProvider } from "@/hooks/use-reading-stats";
 import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { PWAStatusBar } from "@/components/PWAStatusBar";
+import { BottomNav } from "@/components/Header";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ const App = () => (
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
+                  <BottomNav />
                   <PWAStatusBar />
                 </BrowserRouter>
               </TooltipProvider>
