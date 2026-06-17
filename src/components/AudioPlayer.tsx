@@ -51,7 +51,7 @@ export function AudioPlayer() {
       )}
     >
       <div className={cn("mx-auto", isMobile ? "" : "max-w-3xl")}>
-        <div className="bg-card/95 backdrop-blur-xl rounded-2xl border border-border/60 shadow-2xl shadow-black/10 p-3">
+        <div className="bg-card border border-border rounded-2xl shadow-xl p-3">
           {error ? (
             <div className="flex items-center gap-2 text-destructive text-sm py-1">
               <Volume2 className="w-4 h-4 shrink-0" />
@@ -72,7 +72,7 @@ export function AudioPlayer() {
                 size="icon"
                 onClick={togglePlay}
                 disabled={isLoadingAudio}
-                className="rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0 shadow-md shadow-primary/30 bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 disabled:opacity-70"
+                className="rounded-full h-10 w-10 sm:h-11 sm:w-11 shrink-0 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-70"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >
                 {isLoadingAudio ? (
@@ -102,7 +102,7 @@ export function AudioPlayer() {
                   onClick={handleSeekClick}
                 >
                   <div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all"
+                    className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all"
                     style={{ width: `${progressPercent}%` }}
                   />
                   <div
