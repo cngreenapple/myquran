@@ -1,7 +1,22 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { LastRead } from "@/types/quran";
 
 const STORAGE_KEY = "quran-last-read";
+
+interface LastReadContextValue {
+  lastRead: LastRead | null;
+  updateLastRead: (data: Omit<LastRead, "timestamp">) => void;
+  clearLastRead: () => void;
+}
+
+const LastReadContext = createContext<LastReadContextValue | null>(null);
 
 function loadLastRead(): LastRead | null {
   if (typeof window === "undefined") return null;
@@ -13,7 +28,7 @@ function loadLastRead(): LastRead | null {
   }
 }
 
-export function useLastRead() {
+export function LastReadProvider({ children }: { children: ReactNode }) {
   const [lastRead, setLastRead] = useState<LastRead | null>(loadLastRead);
 
   useEffect(() => {
@@ -34,5 +49,18 @@ export function useLastRead() {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  return { lastRead, updateLastRead, clearLastRead };
+  return (
+    <LastReadContext.Provider
+      value={{ lastRead, updateLastRead, clearLastRead }}
+    >
+      {children}
+    </LastReadContext.Provider>
+  );
+}
+
+export function useLastRead() {
+  const ctx = useContext(LastReadContext);
+  if (!ctx)
+    throw new Error("useLastRead must be used within LastReadProvider");
+  return ctx;
 }
