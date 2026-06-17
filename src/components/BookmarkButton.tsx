@@ -19,19 +19,28 @@ export function BookmarkButton({
   variant = "default",
 }: BookmarkButtonProps) {
   const { isBookmarked, toggleBookmark } = useBookmarks();
+
+  if (!surahNumber || !ayat || !ayat.nomorAyat) {
+    return null;
+  }
+
   const bookmarked = isBookmarked(surahNumber, ayat.nomorAyat);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleBookmark({
-      surahNumber,
-      surahName,
-      ayatNumber: ayat.nomorAyat,
-      teksArab: ayat.teksArab,
-      teksIndonesia: ayat.teksIndonesia,
-    });
-    showSuccess(bookmarked ? "Bookmark dihapus" : "Ayat disimpan ke bookmark");
+    try {
+      toggleBookmark({
+        surahNumber,
+        surahName: surahName || "",
+        ayatNumber: ayat.nomorAyat,
+        teksArab: ayat.teksArab || "",
+        teksIndonesia: ayat.teksIndonesia || "",
+      });
+      showSuccess(bookmarked ? "Bookmark dihapus" : "Ayat disimpan ke bookmark");
+    } catch (err) {
+      console.error("[BookmarkButton] Error toggling bookmark", err);
+    }
   };
 
   if (variant === "compact") {
@@ -45,6 +54,7 @@ export function BookmarkButton({
             : "bg-muted text-muted-foreground hover:bg-muted/70",
         )}
         aria-label={bookmarked ? "Hapus bookmark" : "Tambah bookmark"}
+        type="button"
       >
         {bookmarked ? (
           <BookmarkCheck className="w-4 h-4 fill-current" />
@@ -60,6 +70,7 @@ export function BookmarkButton({
       variant="ghost"
       size="sm"
       onClick={handleClick}
+      type="button"
       className={cn(
         "gap-1.5 rounded-full",
         bookmarked &&

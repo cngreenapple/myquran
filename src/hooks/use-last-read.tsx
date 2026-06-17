@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -22,8 +23,12 @@ function loadLastRead(): LastRead | null {
   if (typeof window === "undefined") return null;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? (JSON.parse(stored) as LastRead) : null;
-  } catch {
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as LastRead;
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed;
+  } catch (err) {
+    console.error("[LastRead] Failed to load from localStorage", err);
     return null;
   }
 }
@@ -32,8 +37,12 @@ export function LastReadProvider({ children }: { children: ReactNode }) {
   const [lastRead, setLastRead] = useState<LastRead | null>(loadLastRead);
 
   useEffect(() => {
-    if (lastRead) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lastRead));
+    try {
+      if (lastRead) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(lastRead));
+      }
+    } catch (err) {
+      console.error("[LastRead] Failed to save to localStorage", err);
     }
   }, [lastRead]);
 
@@ -46,13 +55,20 @@ export function LastReadProvider({ children }: { children: ReactNode }) {
 
   const clearLastRead = useCallback(() => {
     setLastRead(null);
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.error("[LastRead] Failed to remove from localStorage", err);
+    }
   }, []);
 
+  const value = useMemo<LastReadContextValue>(
+    () => ({ lastRead, updateLastRead, clearLastRead }),
+    [lastRead, updateLastRead, clearLastRead],
+  );
+
   return (
-    <LastReadContext.Provider
-      value={{ lastRead, updateLastRead, clearLastRead }}
-    >
+    <LastReadContext.Provider value={value}>
       {children}
     </LastReadContext.Provider>
   );
