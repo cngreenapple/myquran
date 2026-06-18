@@ -7,5 +7,5 @@ export interface AsmaulHusna {
   meaningId: string;
   meaningEn: string;
   benefit: string;
-  color?: ColorVariant;
+  color?: ColorVariant; // computed from number % 5
 }

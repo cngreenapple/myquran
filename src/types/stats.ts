@@ -1,10 +1,10 @@
 export interface ReadingStats {
-  totalAyatRead: number;
-  surahsOpened: number[];
-  lastReadAt: number;
-  streakDays: number;
+  totalAyatRead: number; // Total ayat yang pernah dibuka
+  surahsOpened: number[]; // Array of surah numbers yang pernah dibuka
+  lastReadAt: number; // timestamp
+  streakDays: number; // hari berturut membaca
   longestStreak: number;
-  lastActivityDate: string;
+  lastActivityDate: string; // YYYY-MM-DD
 }
 
 export interface ReadingHistoryItem {
