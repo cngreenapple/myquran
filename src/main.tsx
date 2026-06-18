@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App_q5k.tsx";
+import App from "./App.tsx";
 import "./globals.css";
 
 class ErrorBoundary extends Component<
@@ -94,32 +94,10 @@ class ErrorBoundary extends Component<
             </pre>
           </details>
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
-            <button
-              onClick={this.handleReload}
-              style={{
-                padding: "0.5rem 1.5rem",
-                background: "#047857",
-                color: "white",
-                border: "none",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
+            <button onClick={this.handleReload} style={{ padding: "0.5rem 1.5rem", background: "#047857", color: "white", border: "none", borderRadius: "9999px", cursor: "pointer", fontWeight: 600 }}>
               Refresh Halaman
             </button>
-            <button
-              onClick={this.handleReset}
-              style={{
-                padding: "0.5rem 1.5rem",
-                background: "transparent",
-                color: "#dc2626",
-                border: "1px solid #dc2626",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                fontWeight: 600,
-              }}
-            >
+            <button onClick={this.handleReset} style={{ padding: "0.5rem 1.5rem", background: "transparent", color: "#dc2626", border: "1px solid #dc2626", borderRadius: "9999px", cursor: "pointer", fontWeight: 600 }}>
               Reset & Refresh
             </button>
           </div>
@@ -136,19 +114,3 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ErrorBoundary>,
 );
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
-      .then((registration) => {
-        console.log("[PWA] Service Worker registered:", registration.scope);
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000);
-      })
-      .catch((err) => {
-        console.warn("[PWA] Service Worker registration failed:", err);
-      });
-  });
-}

@@ -1,15 +1,3 @@
-` + `<dyad-rename from="src/App.tsx.new" to="src/App.tsx">`. Dua-duanya harus atomic. Kalau tetap tidak ada file `src/App.tsx` di project, ada 2 kemungkinan:
-
-1. **Rename tidak jalan** (Dyad runtime di project ini mungkin memblokir rename ke path yang sudah ada)
-2. **`.new` file ada tapi rename ke `App.tsx` diabaikan**
-
-Strategi paling reliable: **cari tahu dulu file mana yang ada**, lalu tentukan aksi.
-
-Saya bisa kirim **eksperimen kecil**: tulis file marker dengan path yang unik supaya saya tahu `<dyad-write>` jalan, dan baca strukturnya. Tapi saya tidak punya tool "ls" di runtime ini — saya hanya bisa `<dyad-write>`, `<dyad-rename>`, `<dyad-delete>`.
-
-**Cara lain yang deterministic**: pakai path yang **tidak akan konflik sama sekali** — tulis ulang `App.tsx` ke path dengan **suffix angka acak** (yang pasti belum ada), rename, lalu jika rename masih gagal, minta user rename manual:
-
-<dyad-write path="src/App_x987.tsx" description="App.tsx dengan suffix unik (x987) untuk menghindari path conflict. Isi sama: route Kalender sudah dihapus, lazy import hanya untuk file yang exist.">
 import { useState, Suspense, lazy, useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -25,16 +13,11 @@ import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { BookmarkProvider } from "@/hooks/use-bookmarks";
 import { NotesProvider } from "@/hooks/use-notes";
 import { AppDrawer } from "@/components/AppDrawer";
-import { PWAStatusBar } from "@/components/PWAStatusBar";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
+    queries: { staleTime: 1000 * 60 * 5, refetchOnWindowFocus: false, retry: 1 },
   },
 });
 
@@ -69,28 +52,27 @@ function RouteAudioStopper() {
 }
 
 function AppShell() {
-  const [drawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   return (
     <>
-      <AppDrawer open={drawerOpen} onOpenChange={() => {}} />
+      <AppDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       <RouteAudioStopper />
-      <PWAStatusBar />
       <Suspense fallback={<div className="min-h-screen bg-background"><div className="container mx-auto px-4 py-6 max-w-5xl"><SurahListSkeleton count={6} /></div></div>}>
         <Routes>
-          <Route path="/" element={<Index onMenuClick={() => {}} />} />
-          <Route path="/surat/:id" element={<SuratDetail onMenuClick={() => {}} />} />
-          <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={() => {}} />} />
-          <Route path="/dzikir" element={<Dzikir onMenuClick={() => {}} />} />
-          <Route path="/doa" element={<Doa onMenuClick={() => {}} />} />
-          <Route path="/asmaul-husna" element={<AsmaulHusna onMenuClick={() => {}} />} />
-          <Route path="/bookmark" element={<BookmarkPage onMenuClick={() => {}} />} />
-          <Route path="/catatan" element={<NotesPage onMenuClick={() => {}} />} />
-          <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={() => {}} />} />
-          <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={() => {}} />} />
-          <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={() => {}} />} />
-          <Route path="/tentang" element={<AboutPage onMenuClick={() => {}} />} />
-          <Route path="/settings" element={<Settings onMenuClick={() => {}} />} />
-          <Route path="*" element={<NotFound onMenuClick={() => {}} />} />
+          <Route path="/" element={<Index onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/surat/:id" element={<SuratDetail onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/dzikir" element={<Dzikir onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/doa" element={<Doa onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/asmaul-husna" element={<AsmaulHusna onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/bookmark" element={<BookmarkPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/catatan" element={<NotesPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/tentang" element={<AboutPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/settings" element={<Settings onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="*" element={<NotFound onMenuClick={() => setDrawerOpen(true)} />} />
         </Routes>
       </Suspense>
     </>
