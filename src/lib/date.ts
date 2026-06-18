@@ -35,6 +35,19 @@ const INDONESIAN_WEEKDAYS = [
   "Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu",
 ];
 
+const INDONESIAN_WEEKDAYS_SHORT = [
+  "Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab",
+];
+
+export {
+  HIJRI_MONTH_NAMES,
+  HIJRI_MONTH_NAMES_ARABIC,
+  GREGORIAN_MONTH_NAMES,
+  GREGORIAN_MONTH_NAMES_SHORT,
+  INDONESIAN_WEEKDAYS,
+  INDONESIAN_WEEKDAYS_SHORT,
+};
+
 export function getDateKey(date: Date | number = new Date()): string {
   const d = typeof date === "number" ? new Date(date) : date;
   const y = d.getFullYear();
@@ -64,7 +77,7 @@ function getHijriMonthLengths(year: number): number[] {
     : [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29];
 }
 
-function gregorianToJDN(year: number, month: number, day: number): number {
+export function gregorianToJDN(year: number, month: number, day: number): number {
   const a = Math.floor((14 - month) / 12);
   const y = year + 4800 - a;
   const m = month + 12 * a - 3;
@@ -79,11 +92,11 @@ function gregorianToJDN(year: number, month: number, day: number): number {
   );
 }
 
-function hijriYearToJDN(year: number): number {
+export function hijriYearToJDN(year: number): number {
   return 1948440 + Math.floor((10631 * year - 10646) / 30);
 }
 
-function jdnToHijri(jdn: number): { year: number; month: number; day: number } {
+export function jdnToHijri(jdn: number): { year: number; month: number; day: number } {
   if (jdn < 1948440) return { year: 1, month: 1, day: 1 };
   const daysSinceEpoch = jdn - 1948440;
   let year = Math.floor((30 * daysSinceEpoch + 10646) / 10631);
@@ -116,9 +129,11 @@ export interface TodayInfo {
     date: Date;
     dateKey: string;
     weekday: string;
+    weekdayShort: string;
     day: number;
     month: number;
     monthName: string;
+    monthNameShort: string;
     year: number;
   };
   hijri: HijriInfo;
@@ -132,9 +147,11 @@ export function getTodayInfo(date: Date = new Date()): TodayInfo {
       date,
       dateKey: getDateKey(date),
       weekday: INDONESIAN_WEEKDAYS[date.getDay()],
+      weekdayShort: INDONESIAN_WEEKDAYS_SHORT[date.getDay()],
       day: date.getDate(),
       month: date.getMonth() + 1,
       monthName: GREGORIAN_MONTH_NAMES[date.getMonth()],
+      monthNameShort: GREGORIAN_MONTH_NAMES_SHORT[date.getMonth()],
       year: date.getFullYear(),
     },
     hijri: {

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, BookOpen, Clock, BookHeart, Hand, Star,
-  Compass, Moon, ArrowRight,
+  Compass, Moon, ArrowRight, Calendar,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -10,6 +10,7 @@ import { SurahCard } from "@/components/SurahCard";
 import { LastReadCard } from "@/components/LastReadCard";
 import { StatsCard } from "@/components/StatsCard";
 import { VerseOfTheDay } from "@/components/VerseOfTheDay";
+import { IslamicCalendarCard } from "@/components/IslamicCalendarCard";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { AudioPlayer } from "@/components/AudioPlayer";
@@ -31,6 +32,7 @@ const QUICK_ACTIONS = [
   { to: "/doa", label: "Doa", icon: Hand, color: "violet" },
   { to: "/asmaul-husna", label: "Asmaul", icon: Star, color: "rose" },
   { to: "/arah-kiblat", label: "Kiblat", icon: Compass, color: "sky" },
+  { to: "/kalender", label: "Kalender", icon: Calendar, color: "violet" },
   { to: "/puasa-sunnah", label: "Puasa", icon: Moon, color: "violet" },
   { to: "/bookmark", label: "Bookmark", icon: BookOpen, color: "amber" },
 ] as const;
@@ -136,7 +138,7 @@ export default function Index({ onMenuClick }: IndexProps) {
 
         <section className="mb-4" aria-label="Akses cepat">
           <nav aria-label="Menu akses cepat">
-            <ul className="grid grid-cols-4 sm:grid-cols-7 gap-2" role="list">
+            <ul className="grid grid-cols-4 sm:grid-cols-4 gap-2" role="list">
               {QUICK_ACTIONS.map((action) => {
                 const Icon = action.icon;
                 const c = colorMap[action.color];
@@ -180,9 +182,14 @@ export default function Index({ onMenuClick }: IndexProps) {
           </nav>
         </section>
 
+        {/* Stats + Last Read + Islamic Calendar */}
         <section className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3" aria-label="Ringkasan">
           <StatsCard />
           <LastReadCard />
+        </section>
+
+        <section className="mb-4" aria-label="Kalender Islam">
+          <IslamicCalendarCard />
         </section>
 
         {settings.showVerseOfTheDay && (

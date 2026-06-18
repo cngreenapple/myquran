@@ -34,6 +34,7 @@ const QiblaPage = lazy(() => import("./pages/QiblaPage"));
 const PuasaSunnahPage = lazy(() => import("./pages/PuasaSunnahPage"));
 const LiveMakkahPage = lazy(() => import("./pages/LiveMakkahPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
+const KalenderPage = lazy(() => import("./pages/KalenderPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function RouteAudioStopper() {
@@ -69,6 +70,7 @@ function AppShell() {
           <Route path="/catatan" element={<NotesPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/kalender" element={<KalenderPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/tentang" element={<AboutPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/settings" element={<Settings onMenuClick={() => setDrawerOpen(true)} />} />
