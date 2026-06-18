@@ -40,6 +40,13 @@ export function LastReadProvider({ children }: { children: ReactNode }) {
     try {
       if (lastRead) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(lastRead));
+      } else {
+        // Sync removal: kalau state null, pastikan storage juga kosong
+        // untuk konsistensi (edge case: external code write ke storage)
+        const current = localStorage.getItem(STORAGE_KEY);
+        if (current) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
       }
     } catch (err) {
       console.error("[LastRead] Failed to save to localStorage", err);
