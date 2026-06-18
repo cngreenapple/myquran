@@ -3,12 +3,18 @@
  * - Cache-first untuk static assets
  * - Network-first untuk API dengan fallback ke cache
  * - Offline fallback page
+ * - Auto-clear old cache versions saat SW update
  */
 
-const STATIC_CACHE = 'alquran-static-v1';
-const API_CACHE = 'alquran-api-v1';
-const AUDIO_CACHE = 'alquran-audio-v1';
-const IMAGE_CACHE = 'alquran-images-v1';
+const APP_VERSION = '1.0.0';
+const CACHE_VERSION = `v1-${APP_VERSION}`;
+const STATIC_CACHE = `alquran-static-${CACHE_VERSION}`;
+const API_CACHE = `alquran-api-${CACHE_VERSION}`;
+const AUDIO_CACHE = `alquran-audio-${CACHE_VERSION}`;
+const IMAGE_CACHE = `alquran-images-${CACHE_VERSION}`;
+
+// Semua cache yang valid untuk app ini
+const VALID_CACHES = [STATIC_CACHE, API_CACHE, AUDIO_CACHE, IMAGE_CACHE];
 
 const STATIC_ASSETS = [
   '/',
@@ -20,7 +26,7 @@ const STATIC_ASSETS = [
 
 // Install: precache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log(`[SW] Installing version ${CACHE_VERSION}...`);
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       console.log('[SW] Caching static assets');
@@ -32,16 +38,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: cleanup old caches
+// Activate: cleanup old caches (yang tidak match CACHE_VERSION)
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+  console.log(`[SW] Activating version ${CACHE_VERSION}...`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => {
-            return ![STATIC_CACHE, API_CACHE, AUDIO_CACHE, IMAGE_CACHE].includes(name);
-          })
+          .filter((name) => !VALID_CACHES.includes(name))
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -143,9 +147,13 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
-// Message: skip waiting on update
+// Message: skip waiting on update + reply to client
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  // Reply to client untuk handshake/ping
+  if (event.source && event.data && event.data.type === 'PING') {
+    event.source.postMessage({ type: 'PONG', version: CACHE_VERSION });
   }
 });

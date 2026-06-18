@@ -77,8 +77,10 @@ export function usePWA() {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    // Check if already installed (Android: display-mode, iOS: navigator.standalone)
+    const isStandaloneDisplay = window.matchMedia("(display-mode: standalone)").matches;
+    const isIOSStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (isStandaloneDisplay || isIOSStandalone) {
       setIsInstalled(true);
     }
 
