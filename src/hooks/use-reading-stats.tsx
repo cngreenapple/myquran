@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { ReadingStats, ReadingHistoryItem } from "@/types/stats";
+import { getDateKey, daysBetween } from "@/lib/date";
 
 const STATS_KEY = "quran-reading-stats";
 const HISTORY_KEY = "quran-reading-history";
@@ -56,16 +57,6 @@ function loadHistory(): ReadingHistoryItem[] {
   } catch {
     return [];
   }
-}
-
-function getDateKey(date: Date = new Date()): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function daysBetween(date1: string, date2: string): number {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function ReadingStatsProvider({ children }: { children: ReactNode }) {
@@ -218,7 +209,7 @@ export function ReadingStatsProvider({ children }: { children: ReactNode }) {
   const getTodayCount = useCallback((): number => {
     const today = getDateKey();
     return history.filter((h) => {
-      const itemDate = getDateKey(new Date(h.timestamp));
+      const itemDate = getDateKey(h.timestamp);
       return itemDate === today && h.ayatNumber > 0;
     }).length;
   }, [history]);

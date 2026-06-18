@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { DzikirCounter } from "@/types/dzikir";
+import { isSameDay } from "@/lib/date";
 
 const STORAGE_KEY = "quran-dzikir-counters";
 
@@ -39,18 +40,6 @@ function loadCounters(): Record<string, DzikirCounter> {
 
 function makeKey(categoryId: string, itemId: string): string {
   return `${categoryId}::${itemId}`;
-}
-
-/**
- * Get YYYY-MM-DD date key dari timestamp.
- * Pakai local date (bukan UTC) supaya match dengan hari user.
- */
-function getDateKey(timestamp: number): string {
-  const d = new Date(timestamp);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
 }
 
 export function DzikirProvider({ children }: { children: ReactNode }) {
@@ -154,24 +143,14 @@ export function DzikirProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /**
-   * Total dzikir yang selesai **pada hari ini** (date key match).
-   * Lebih akurat dari window 24 jam: kalau user increment di 23:30 dan
-   * check di 00:30 next day, increment sebelumnya tetap dihitung untuk
-   * tanggal increment, BUKAN hari ini.
-   *
-   * Note: counter hanya punya `lastUpdated` timestamp, bukan `completedAt`.
-   * Untuk simplicity, kita pakai `lastUpdated` sebagai proxy. Kalau user
-   * increment siang hari, lalu increment pagi hari berikutnya, increment
-   * pertama akan di-attribute ke tanggal sebelumnya → mungkin miss.
-   *
-   * Trade-off: counter tidak di-archive per hari, jadi kita tidak punya
-   * "completedAt". Pakai `lastUpdated` cukup untuk typical use case
-   * (user increment + complete dalam satu sesi).
+   * Total dzikir yang selesai **pada hari ini**.
+   * Pakai isSameDay() untuk akurasi timezone-aware.
+   * Counter tidak di-archive per hari, jadi kita pakai lastUpdated sebagai proxy.
    */
   const totalCompletedToday = useMemo(() => {
-    const todayKey = getDateKey(Date.now());
+    const now = Date.now();
     return Object.values(counters).filter(
-      (c) => c.completed && getDateKey(c.lastUpdated) === todayKey,
+      (c) => c.completed && isSameDay(c.lastUpdated, now),
     ).length;
   }, [counters]);
 
