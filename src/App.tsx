@@ -33,6 +33,7 @@ const NotesPage = lazy(() => import("./pages/NotesPage"));
 const QiblaPage = lazy(() => import("./pages/QiblaPage"));
 const PuasaSunnahPage = lazy(() => import("./pages/PuasaSunnahPage"));
 const LiveMakkahPage = lazy(() => import("./pages/LiveMakkahPage"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -70,6 +71,7 @@ function AppShell() {
           <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/kalender" element={<CalendarPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/tentang" element={<AboutPage onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/settings" element={<Settings onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="*" element={<NotFound onMenuClick={() => setDrawerOpen(true)} />} />
