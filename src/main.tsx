@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import App from "./App_q5k.tsx";
 import "./globals.css";
 
 class ErrorBoundary extends Component<
@@ -17,11 +17,8 @@ class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log to console in dev; could integrate with Sentry/LogRocket in prod
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
     this.setState({ errorInfo });
-
-    // Optional: report to analytics
     if (typeof window !== "undefined" && (window as any).gtag) {
       try {
         (window as any).gtag("event", "exception", {
@@ -38,7 +35,6 @@ class ErrorBoundary extends Component<
 
   handleReset = () => {
     try {
-      // Clear all app data to recover from corrupted state
       const keys = Object.keys(localStorage);
       keys.forEach((k) => {
         if (k.startsWith("quran-")) localStorage.removeItem(k);
@@ -141,18 +137,15 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>,
 );
 
-// PWA: Register service worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
         console.log("[PWA] Service Worker registered:", registration.scope);
-
-        // Check for updates periodically
         setInterval(() => {
           registration.update();
-        }, 60 * 60 * 1000); // Check every hour
+        }, 60 * 60 * 1000);
       })
       .catch((err) => {
         console.warn("[PWA] Service Worker registration failed:", err);
