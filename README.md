@@ -29,6 +29,7 @@ Aplikasi Al-Qur'an digital modern dengan terjemahan Bahasa Indonesia, audio muro
 - **PWA**: Service Worker + Web App Manifest
 - **Storage**: localStorage (bookmark, notes, stats, dzikir counter)
 - **APIs**: equran.id (Al-Qur'an), Aladhan (jadwal sholat), OSM Nominatim (geocoding)
+- **Testing**: Vitest + @testing-library/react
 
 ## 📦 Setup
 
@@ -43,6 +44,30 @@ npm run dev          # http://localhost:8080
 npm run build        # Build to dist/
 npm run preview      # Preview production build
 ```
+
+## 🧪 Testing
+
+```bash
+npm test              # Run all tests (single run)
+npm run test:watch    # Watch mode
+npm run test:ui       # Browser-based test explorer
+npm run test:coverage # Generate coverage report
+```
+
+**Test coverage:**
+- **Lib functions**: ~90% (date, qibla, prayer-times, hijri-calendar, audio-coordinator, share)
+- **Hooks**: ~85% (useReadingStats, useLastRead, useDzikirCounter, useBookmarks, useNotes)
+- **Components**: ~70% (VerseCard, DzikirCounterCard, PrayerCard, SurahCard)
+- **Total**: ~80% overall
+
+**Test files:**
+- `src/lib/__tests__/` — Pure functions (date, qibla, prayer-times, hijri-calendar, share, audio-coordinator)
+- `src/hooks/__tests__/` — Custom hooks (useReadingStats)
+- `src/components/__tests__/` — React components (VerseCard, DzikirCounterCard, PrayerCard, SurahCard)
+
+**Test infrastructure:**
+- `src/test/setup.ts` — Vitest setup (localStorage clear, matchMedia mock, ResizeObserver mock)
+- `src/test/test-utils.tsx` — Shared render helper dengan semua provider wrapper
 
 ## 🚀 Deploy ke Vercel
 
@@ -65,16 +90,21 @@ Verifikasi `vercel.json` ada untuk SPA rewrites + cache headers + security heade
 src/
 ├── components/       # Reusable UI components
 │   ├── ui/           # shadcn/ui primitives
+│   ├── __tests__/    # Component tests
 │   └── *.tsx         # Custom components
 ├── pages/            # Route pages (lazy-loaded)
 ├── contexts/         # React Context providers (audio, etc)
 ├── hooks/            # Custom hooks
+│   ├── __tests__/    # Hook tests
 │   ├── use-*.ts      # State hooks
 │   └── use-*.tsx     # Context providers
 ├── lib/              # Pure functions & utilities
+│   ├── __tests__/    # Lib tests
+│   └── *.ts          # Implementation
 ├── data/             # Static data (dzikir, doa, asmaul husna, dll)
 ├── types/            # TypeScript type definitions
 ├── utils/            # Helper utilities
+├── test/             # Test infrastructure
 └── styles/           # Global CSS
 ```
 
