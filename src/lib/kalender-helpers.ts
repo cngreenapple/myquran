@@ -5,23 +5,28 @@
  * - gregorianMonthInfo: info bulan Masehi (days in month, start weekday)
  * - getHijriMonthInfo: info bulan Hijriah (days in month, start weekday)
  *
- * Untuk konversi Masehi ↔ Hijriah pakai `lib/date.ts` (gregorianToJDN, jdnToHijri).
+ * Untuk konversi Masehi ↔ Hijriah dan helper JDN pakai `lib/date.ts`
+ * (gregorianToJDN, jdnToHijri).
  */
 
 const HIJRI_LEAP_YEARS_PATTERN = [2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29];
 
-export function isHijriLeapYear(year: number): boolean {
+function isHijriLeapYear(year: number): boolean {
   return HIJRI_LEAP_YEARS_PATTERN.includes(year % 30);
 }
 
-export function getHijriMonthLengths(year: number): number[] {
+function getHijriMonthLengths(year: number): number[] {
   return isHijriLeapYear(year)
     ? [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30]
     : [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29];
 }
 
+/**
+ * Info bulan Masehi untuk grid kalender.
+ * @param year full year (e.g. 2025)
+ * @param month 0-indexed (Jan=0, Dec=11) — JS Date convention
+ */
 export function gregorianMonthInfo(year: number, month: number) {
-  // month: 0-11 (JS Date convention)
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
@@ -30,12 +35,12 @@ export function gregorianMonthInfo(year: number, month: number) {
 }
 
 /**
- * Hitung info bulan Hijriah:
+ * Hitung info bulan Hijriah untuk grid kalender.
  * - daysInMonth: 29 atau 30 (tergantung kabisat)
- * - startWeekday: 0-6 (hari Minggu = 0) dari tanggal 1 bulan Hijriah tsb
+ * - startWeekday: 0-6 (Minggu=0) untuk tanggal 1 bulan Hijriah tsb
+ * - startDate / endDate: Date Gregorian in range
  *
- * Algoritma: epoch Hijriah JDN = 1948440 (1 Muharram 1 H)
- * 1 Muharram tahun Y → JDN = 1948440 + floor((10631*Y - 10646) / 30)
+ * Algoritma: 1 Muharram tahun Y → JDN = 1948440 + floor((10631*Y - 10646) / 30)
  */
 export function getHijriMonthInfo(hijriYear: number, hijriMonth: number) {
   const epochJDN = 1948440;
@@ -44,30 +49,28 @@ export function getHijriMonthInfo(hijriYear: number, hijriMonth: number) {
 
   const monthLengths = getHijriMonthLengths(hijriYear);
 
-  // Day-of-year untuk hijriMonth
+  // Day-of-year untuk hijriMonth (1-indexed)
   let dayOfYear = 1;
   for (let i = 0; i < hijriMonth - 1; i++) {
     dayOfYear += monthLengths[i];
   }
   const monthStartJDN = yearStartJDN + dayOfYear - 1;
-
-  // JDN → Date (Gregorian) untuk dapat weekday
-  const monthStart = jdnToDate(monthStartJDN);
-  const monthEnd = jdnToDate(monthStartJDN + monthLengths[hijriMonth - 1] - 1);
+  const monthEndJDN = monthStartJDN + monthLengths[hijriMonth - 1] - 1;
 
   return {
     daysInMonth: monthLengths[hijriMonth - 1],
-    startWeekday: monthStart.getDay(),
-    startDate: monthStart,
-    endDate: monthEnd,
+    startWeekday: jdnToDate(monthStartJDN).getDay(),
+    startDate: jdnToDate(monthStartJDN),
+    endDate: jdnToDate(monthEndJDN),
   };
 }
 
 /**
- * Convert JDN (Julian Day Number) ke JavaScript Date.
+ * Convert JDN (Julian Day Number) ke JavaScript Date (Gregorian).
  * Inverse dari gregorianToJDN.
+ * Local to this module — tidak di-export untuk hindari duplikasi.
  */
-export function jdnToDate(jdn: number): Date {
+function jdnToDate(jdn: number): Date {
   const a = jdn + 32044;
   const b = Math.floor((4 * a + 3) / 146097);
   const c = a - Math.floor((146097 * b) / 4);

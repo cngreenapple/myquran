@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import {
-  gregorianMonthInfo,
   gregorianToJDN,
   jdnToHijri,
 } from "@/lib/date";
+import { gregorianMonthInfo } from "@/lib/kalender-helpers";
 import { getHolidayOnDate } from "@/data/islamic-holidays";
 import type { IslamicHoliday } from "@/data/islamic-holidays";
 import { DayCell, EmptyDayCell } from "./DayCell";
@@ -50,8 +50,8 @@ export function GregorianMonthGrid({
     return arr;
   }, [info, gregYear, gregMonth, todayGreg]);
 
-  const context = `${d} ${monthName} ${gregYear}`.replace("d", "");
-  const label = `${monthName} ${gregYear}`;
+  const context = `${monthName} ${gregYear}`;
+  const label = context;
 
   return (
     <div>
