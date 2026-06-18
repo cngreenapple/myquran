@@ -12,7 +12,11 @@ import { useDocumentTitle } from "@/hooks/use-document-title";
 import { showSuccess } from "@/utils/toast";
 import { useState } from "react";
 
-export default function BookmarkPage() {
+interface BookmarkPageProps {
+  onMenuClick: () => void;
+}
+
+export default function BookmarkPage({ onMenuClick }: BookmarkPageProps) {
   useDocumentTitle("Bookmark");
   const { bookmarks, totalCount, query, setQuery, removeBookmark, clearBookmarks, confirming, setConfirming } = useBookmarksPage();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export default function BookmarkPage() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="bookmark-title">
         <section className="mb-4">
           <div className="flex items-start justify-between gap-3 mb-3">

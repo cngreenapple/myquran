@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, StickyNote, Trash2, Plus, BookOpen } from "lucide-react";
+import { Search, StickyNote, Trash2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
@@ -12,14 +12,15 @@ import { useNotesPage } from "@/hooks/use-notes-page";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { showSuccess } from "@/utils/toast";
 
-export default function NotesPage() {
+interface NotesPageProps {
+  onMenuClick: () => void;
+}
+
+export default function NotesPage({ onMenuClick }: NotesPageProps) {
   useDocumentTitle("Catatan");
 
-  const { notes, totalCount, query, setQuery, removeBookmark, clearNotes, confirming, setConfirming } = useNotesPage();
-
-  // Fix: useNotesPage returns removeBookmark alias for removeNote. Use proper binding.
+  const { notes, totalCount, query, setQuery, clearNotes, confirming, setConfirming } = useNotesPage();
   const { removeNote } = useNotesPage();
-  void removeBookmark; // satisfy unused
 
   const handleClearAll = () => {
     clearNotes();
@@ -29,7 +30,7 @@ export default function NotesPage() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="notes-title">
         <section className="mb-4">
           <div className="flex items-start justify-between gap-3 mb-3">
