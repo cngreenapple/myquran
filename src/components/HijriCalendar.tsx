@@ -165,7 +165,7 @@ export function HijriCalendar({
             return (
               <div
                 key={`empty-${i}`}
-                className="min-h-[78px] sm:min-h-[92px]"
+                className="min-h-[110px] sm:min-h-[120px]"
                 aria-hidden="true"
               />
             );
@@ -197,7 +197,7 @@ export function HijriCalendar({
             containerClass = cn("bg-card border border-border/40 text-foreground");
           }
 
-          // Short holiday label (maks 2 kata)
+          // Short holiday label
           const holidayShort = primaryHoliday
             ? primaryHoliday.name
                 .replace(/Hari Raya /, "HR ")
@@ -223,7 +223,7 @@ export function HijriCalendar({
               : primaryPuasa.title.length > 14 ? primaryPuasa.title.slice(0, 12) + "…" : primaryPuasa.title)
             : "";
 
-          // Tooltip lengkap untuk desktop hover
+          // Tooltip lengkap
           const tooltipLines = [
             `${day.gregorian.weekday}, ${day.gregorian.day} ${MONTH_NAMES[day.gregorian.month - 1]} ${day.gregorian.year}`,
             `${day.hijri.day} ${day.hijri.monthName} ${day.hijri.year} H`,
@@ -256,76 +256,80 @@ export function HijriCalendar({
             <div
               key={day.gregorian.date.toISOString()}
               className={cn(
-                "relative min-h-[78px] sm:min-h-[92px] rounded-xl",
-                "flex flex-col items-stretch justify-start",
+                "relative min-h-[110px] sm:min-h-[120px] rounded-xl",
+                "flex flex-col items-stretch",
                 "cursor-pointer transition-all duration-150",
                 "hover:scale-[1.04] hover:shadow-md active:scale-[0.97]",
-                "overflow-hidden",
+                "overflow-hidden p-1.5",
                 containerClass,
               )}
               title={tooltip || undefined}
               aria-label={ariaLabel}
             >
-              {/* Vertical accent bar untukpuasa (di belakang holiday, di atas plain) */}
-              {hasPuasa && !hasHoliday && puasaColor && (
-                <div
-                  className={cn(
-                    "absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full z-0",
-                    puasaBarMap[puasaColor] || "bg-violet-500",
-                  )}
-                  aria-hidden="true"
-                />
-              )}
-
-              {/* Baris atas: nama hari pendek + marker emoji (jika ada) */}
-              <div className="flex items-center justify-between px-1.5 pt-1 relative z-10">
+              {/* Baris 1: Label hari lengkap (Senin, Selasa, dst.) + emoji holiday */}
+              <div className="flex items-center justify-between gap-1 mb-1">
                 <span
                   className={cn(
-                    "text-[8px] sm:text-[9px] font-bold uppercase tracking-wider",
-                    day.isJumat ? "text-emerald-600 dark:text-emerald-400" : "opacity-60",
-                    day.isToday && "text-primary-foreground opacity-100",
+                    "text-[9px] sm:text-[10px] font-bold uppercase tracking-wide truncate",
+                    day.isJumat
+                      ? day.isToday
+                        ? "text-primary-foreground"
+                        : "text-emerald-700 dark:text-emerald-400"
+                      : "opacity-70",
+                    day.isToday && "opacity-100",
                   )}
                 >
-                  {day.gregorian.weekday.slice(0, 3)}
+                  {day.gregorian.weekday}
                 </span>
                 {hasHoliday && (
-                  <span className="text-[10px] leading-none" aria-hidden="true">
+                  <span
+                    className="text-[10px] sm:text-xs leading-none shrink-0"
+                    aria-hidden="true"
+                  >
                     {primaryHoliday!.emoji}
                   </span>
                 )}
               </div>
 
-              {/* Baris tengah: tanggal Gregorian (besar) + tanggal Hijri (kecil) */}
-              <div className="flex-1 flex flex-col items-center justify-center px-1 relative z-10">
+              {/* Baris 2: Tanggal Gregorian (besar) */}
+              <div className="flex items-baseline justify-center gap-1">
                 <span
                   className={cn(
                     "font-bold leading-none tabular-nums",
-                    "text-[15px] sm:text-lg",
-                    day.isToday && "scale-110",
+                    "text-xl sm:text-2xl",
+                    day.isToday && "scale-105",
                   )}
                 >
                   {day.gregorian.day}
                 </span>
                 <span
                   className={cn(
-                    "leading-none mt-0.5 tabular-nums",
-                    "text-[9px] sm:text-[10px]",
-                    "opacity-60",
+                    "font-semibold leading-none tabular-nums text-[10px] sm:text-xs opacity-70",
                   )}
                 >
-                  {day.hijri.day}
+                  / {day.hijri.day}
                 </span>
               </div>
 
-              {/* Baris bawah: label holiday / puasa */}
-              {(holidayShort || puasaShort || hasPuasa) && (
+              {/* Vertical accent bar untuk puasa (di kanan cell) */}
+              {hasPuasa && !hasHoliday && puasaColor && (
                 <div
                   className={cn(
-                    "px-1 pb-1 pt-0.5 relative z-10",
-                    "text-[8px] sm:text-[9px] font-semibold leading-tight text-center",
-                    "line-clamp-2 min-h-[14px] sm:min-h-[16px]",
-                    day.isToday ? "text-primary-foreground/90" : "opacity-80",
-                    !hasHoliday && hasPuasa && "pl-2",
+                    "absolute right-0 top-3 bottom-3 w-1 rounded-l-full",
+                    puasaBarMap[puasaColor] || "bg-violet-500",
+                  )}
+                  aria-hidden="true"
+                />
+              )}
+
+              {/* Baris 3: Label holiday / puasa */}
+              {(holidayShort || puasaShort) && (
+                <div
+                  className={cn(
+                    "mt-1 text-center",
+                    "text-[8px] sm:text-[9px] font-bold leading-tight",
+                    "line-clamp-2 min-h-[16px]",
+                    day.isToday ? "text-primary-foreground/95" : "opacity-90",
                   )}
                   aria-hidden="true"
                 >
@@ -336,7 +340,7 @@ export function HijriCalendar({
                     <div className="truncate">{puasaShort}</div>
                   )}
                   {day.puasaSunnah.length > 1 && (
-                    <div className="text-[7px] opacity-60 mt-0.5">
+                    <div className="text-[7px] opacity-70 mt-0.5">
                       +{day.puasaSunnah.length - 1} puasa
                     </div>
                   )}
