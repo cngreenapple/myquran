@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Calendar as CalendarIcon, Sparkles, Moon, Info, Star } from "lucide-react";
+import { ArrowLeft, Calendar as CalendarIcon, Sparkles, Moon, Info, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { HijriCalendar } from "@/components/HijriCalendar";
 import { HolidayList } from "@/components/HolidayList";
+import { useHijriCalendar } from "@/hooks/use-hijri-calendar";
 import { getMonthCalendar, getUpcomingEvents, getTodayInfo, formatFullDate } from "@/lib/hijri-calendar";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
@@ -21,7 +22,22 @@ export default function Kalender({ onMenuClick }: KalenderProps) {
   const [viewDate, setViewDate] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [activeTab, setActiveTab] = useState<"kalender" | "libur">("kalender");
 
-  const days = useMemo(() => getMonthCalendar(viewDate.year, viewDate.month, { today }), [viewDate.year, viewDate.month, today]);
+  // Primary: Aladhan API (reliable, no local algorithm bugs)
+  const {
+    data: apiDays,
+    isLoading: isLoadingCalendar,
+    isError: isCalendarError,
+    refetch: refetchCalendar,
+  } = useHijriCalendar(viewDate.year, viewDate.month + 1);
+
+  // Fallback: local calculation if API fails
+  const fallbackDays = useMemo(
+    () => getMonthCalendar(viewDate.year, viewDate.month, { today }),
+    [viewDate.year, viewDate.month, today],
+  );
+
+  const days = apiDays || fallbackDays;
+
   const upcomingEvents = useMemo(() => getUpcomingEvents({ daysAhead: 90 }), []);
   const todayInfo = useMemo(() => getTodayInfo(today), [today]);
 
@@ -98,10 +114,27 @@ export default function Kalender({ onMenuClick }: KalenderProps) {
           <TabsContent value="kalender" className="space-y-3 animate-fade-in">
             <Card className="border-border/60">
               <CardContent className="p-3 sm:p-4">
-                <HijriCalendar year={viewDate.year} month={viewDate.month} days={days} onPrev={handlePrev} onNext={handleNext} />
-                <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-center">
-                  <Button variant="outline" size="sm" onClick={handleToday} className="rounded-full h-7 text-xs" aria-label="Kembali ke bulan ini">Hari Ini</Button>
-                </div>
+                {isLoadingCalendar ? (
+                  <div className="flex flex-col items-center justify-center py-12" aria-busy="true">
+                    <Loader2 className="w-7 h-7 text-primary animate-spin mb-2" aria-hidden="true" />
+                    <p className="text-xs text-muted-foreground">Memuat kalender dari Aladhan...</p>
+                  </div>
+                ) : isCalendarError ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Info className="w-7 h-7 text-amber-500 mb-2" aria-hidden="true" />
+                    <p className="text-xs text-muted-foreground mb-2">Gagal memuat dari server, menampilkan data lokal.</p>
+                    <Button variant="outline" size="sm" onClick={() => refetchCalendar()} className="rounded-full h-7 text-xs">
+                      Coba Lagi
+                    </Button>
+                  </div>
+                ) : (
+                  <HijriCalendar year={viewDate.year} month={viewDate.month} days={days} onPrev={handlePrev} onNext={handleNext} />
+                )}
+                {!isLoadingCalendar && (
+                  <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-center">
+                    <Button variant="outline" size="sm" onClick={handleToday} className="rounded-full h-7 text-xs" aria-label="Kembali ke bulan ini">Hari Ini</Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -143,7 +176,7 @@ export default function Kalender({ onMenuClick }: KalenderProps) {
                 </div>
                 <div className="mt-2.5 pt-2.5 border-t border-border/40 text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5">
                   <Info className="w-3 h-3 mt-0.5 shrink-0" aria-hidden="true" />
-                  <span>Konversi kalender berdasarkan algoritma <strong>Umm al-Qura</strong>. Tanggal Hijriah dapat berbeda ±1 hari tergantung rukyat lokal.</span>
+                  <span>Konversi kalender berdasarkan API <strong>Aladhan</strong> dengan metode <strong>Umm al-Qura</strong>. Tanggal Hijriah dapat berbeda ±1 hari tergantung rukyat lokal.</span>
                 </div>
               </CardContent>
             </Card>

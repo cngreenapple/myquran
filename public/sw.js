@@ -1,19 +1,10 @@
-/**
- * Al-Quran Digital Service Worker
- * - Cache-first untuk static assets
- * - Network-first untuk API dengan fallback ke cache
- * - Offline fallback page
- * - Auto-clear old cache versions saat SW update
- */
-
 const APP_VERSION = '1.0.1';
-const CACHE_VERSION = `v2-${APP_VERSION}`;
+const CACHE_VERSION = `v3-${APP_VERSION}`;
 const STATIC_CACHE = `alquran-static-${CACHE_VERSION}`;
 const API_CACHE = `alquran-api-${CACHE_VERSION}`;
 const AUDIO_CACHE = `alquran-audio-${CACHE_VERSION}`;
 const IMAGE_CACHE = `alquran-images-${CACHE_VERSION}`;
 
-// Semua cache yang valid untuk app ini
 const VALID_CACHES = [STATIC_CACHE, API_CACHE, AUDIO_CACHE, IMAGE_CACHE];
 
 const STATIC_ASSETS = [
@@ -24,12 +15,10 @@ const STATIC_ASSETS = [
   '/icons/icon-maskable.svg',
 ];
 
-// Install: precache static assets
 self.addEventListener('install', (event) => {
   console.log(`[SW] Installing version ${CACHE_VERSION}...`);
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log('[SW] Caching static assets');
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn('[SW] Some static assets failed to cache:', err);
       });
@@ -38,7 +27,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: cleanup old caches (yang tidak match CACHE_VERSION)
 self.addEventListener('activate', (event) => {
   console.log(`[SW] Activating version ${CACHE_VERSION}...`);
   event.waitUntil(
@@ -56,30 +44,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: routing strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
-
-  // Skip chrome-extension and other protocols
   if (!url.protocol.startsWith('http')) return;
 
-  // 1. Al-Quran API (equran.id) - NetworkFirst
   if (url.origin === 'https://equran.id') {
     event.respondWith(networkFirst(request, API_CACHE));
     return;
   }
 
-  // 2. Aladhan API - NetworkFirst
   if (url.origin === 'https://api.aladhan.com') {
     event.respondWith(networkFirst(request, API_CACHE));
     return;
   }
 
-  // 3. Audio files - CacheFirst
   if (
     url.origin === 'https://download.quranicaudio.com' ||
     url.origin === 'https://server8.mp3quran.net' ||
@@ -90,20 +71,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. Images - CacheFirst
   if (/\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/.test(url.pathname)) {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
     return;
   }
 
-  // 5. Same-origin static assets - CacheFirst
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 });
 
-// NetworkFirst: try network, fallback to cache
 async function networkFirst(request, cacheName) {
   try {
     const response = await fetch(request);
@@ -120,11 +98,9 @@ async function networkFirst(request, cacheName) {
   }
 }
 
-// CacheFirst: try cache, fallback to network
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);
   if (cached) {
-    // Refresh cache in background
     fetch(request)
       .then((response) => {
         if (response && response.status === 200) {
@@ -147,12 +123,10 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
-// Message: skip waiting on update + reply to client
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  // Reply to client untuk handshake/ping
   if (event.source && event.data && event.data.type === 'PING') {
     event.source.postMessage({ type: 'PONG', version: CACHE_VERSION });
   }

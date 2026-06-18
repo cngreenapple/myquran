@@ -25,7 +25,7 @@ const HOLIDAY_STYLES: Record<string, { bg: string; text: string; ring: string }>
 };
 const PUASA_BAR: Record<string, string> = { emerald: "bg-emerald-500", amber: "bg-amber-500", sky: "bg-sky-500", rose: "bg-rose-500", violet: "bg-violet-500" };
 
-function holidayLabel(name: string): string {
+function holidayShortName(name: string): string {
   return name
     .replace(/Hari Raya /, "HR ")
     .replace(/Tahun Baru /, "TB ")
@@ -36,7 +36,7 @@ function holidayLabel(name: string): string {
     .replace(/Hari Arafah/, "Arafah");
 }
 
-function puasaLabel(puasa: { title: string; note?: string }): string {
+function puasaShortName(puasa: { title: string; note?: string }): string {
   if (puasa.note === "Puasa Senin") return "Senin";
   if (puasa.note === "Puasa Kamis") return "Kamis";
   if (puasa.title === "Puasa Ayyamul Bidh") return "Ayyamul Bidh";
@@ -78,7 +78,7 @@ export function HijriCalendar({ year, month, days, onPrev, onNext }: HijriCalend
 
   return (
     <div>
-      {/* Header */}
+      {/* Header navigasi bulan */}
       <div className="flex items-center justify-between mb-3">
         <Button variant="ghost" size="icon" onClick={onPrev} className="rounded-full" aria-label="Bulan sebelumnya">
           <ChevronLeft className="w-5 h-5" />
@@ -98,7 +98,7 @@ export function HijriCalendar({ year, month, days, onPrev, onNext }: HijriCalend
         </Button>
       </div>
 
-      {/* Weekday header */}
+      {/* Header nama hari */}
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAYS_SHORT.map((wd) => (
           <div
@@ -113,14 +113,14 @@ export function HijriCalendar({ year, month, days, onPrev, onNext }: HijriCalend
         ))}
       </div>
 
-      {/* Days grid */}
+      {/* Grid tanggal */}
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, i) => {
           if (!day) {
             return (
               <div
                 key={`empty-${i}`}
-                className="min-h-[78px] sm:min-h-[88px]"
+                className="min-h-[80px] sm:min-h-[90px]"
                 aria-hidden="true"
               />
             );
@@ -131,112 +131,107 @@ export function HijriCalendar({ year, month, days, onPrev, onNext }: HijriCalend
           const holiday = hasHoliday ? day.holidays[0] : null;
           const puasa = hasPuasa ? day.puasaSunnah[0] : null;
 
-          const containerClass = day.isToday
-            ? "bg-gradient-to-br from-primary to-emerald-700 text-primary-foreground shadow-md shadow-primary/30 ring-2 ring-primary/50"
-            : hasHoliday
-              ? cn(HOLIDAY_STYLES[holiday!.color].bg, HOLIDAY_STYLES[holiday!.color].text, "ring-1", HOLIDAY_STYLES[holiday!.color].ring)
-              : day.isJumat
-                ? "bg-emerald-50/70 dark:bg-emerald-950/25 text-foreground"
-                : day.isWeekend
-                  ? "bg-muted/40 text-muted-foreground"
-                  : "bg-card border border-border/40 text-foreground";
-
-          const holidayText = holiday ? holidayLabel(holiday.name) : "";
-          const puasaText = puasa ? puasaLabel(puasa) : "";
-
-          // Tooltip lengkap
-          const tooltipLines: string[] = [
-            `${day.gregorian.weekday}, ${day.gregorian.day} ${MONTH_NAMES[day.gregorian.month - 1]} ${day.gregorian.year}`,
-            `${day.hijri.day} ${day.hijri.monthName} ${day.hijri.year} H`,
-          ];
-          if (hasHoliday) {
-            tooltipLines.push("");
-            tooltipLines.push(`🎉 ${holiday!.name}`);
-            if (holiday!.greeting) tooltipLines.push(`   ${holiday!.greeting}`);
+          // Background priority
+          let containerClass = "";
+          if (day.isToday) {
+            containerClass = "bg-gradient-to-br from-primary to-emerald-700 text-primary-foreground shadow-md shadow-primary/30 ring-2 ring-primary/50";
+          } else if (hasHoliday && holiday) {
+            const style = HOLIDAY_STYLES[holiday.color];
+            containerClass = cn(style.bg, style.text, "ring-1", style.ring);
+          } else if (day.isJumat) {
+            containerClass = "bg-emerald-50/70 dark:bg-emerald-950/25 text-foreground";
+          } else if (day.isWeekend) {
+            containerClass = "bg-muted/40 text-muted-foreground";
+          } else {
+            containerClass = "bg-card border border-border/40 text-foreground";
           }
-          if (hasPuasa) {
-            tooltipLines.push("");
-            tooltipLines.push(`${puasa!.emoji} ${puasa!.title}`);
-            if (puasa!.note) tooltipLines.push(`   ${puasa!.note}`);
-            if (day.puasaSunnah.length > 1) {
-              tooltipLines.push(`   +${day.puasaSunnah.length - 1} puasa lainnya`);
-            }
-          }
-          const tooltip = tooltipLines.join("\n");
+
+          const holidayText = holiday ? holidayShortName(holiday.name) : "";
+          const puasaText = puasa ? puasaShortName(puasa) : "";
 
           return (
             <div
               key={day.gregorian.date.toISOString()}
               className={cn(
-                "relative min-h-[78px] sm:min-h-[88px] rounded-xl p-1.5",
-                "flex flex-col items-center justify-start gap-0.5",
+                "relative min-h-[80px] sm:min-h-[90px] rounded-xl p-1.5",
                 "cursor-pointer transition-all duration-150",
                 "hover:scale-[1.04] hover:shadow-md active:scale-[0.97]",
-                "overflow-hidden",
+                "overflow-hidden flex flex-col items-center",
                 containerClass,
               )}
-              title={tooltip || undefined}
+              title={[
+                `${day.gregorian.weekday}, ${day.gregorian.day} ${MONTH_NAMES[day.gregorian.month - 1]} ${day.gregorian.year}`,
+                `${day.hijri.day} ${day.hijri.monthName} ${day.hijri.year} H`,
+                hasHoliday ? `🎉 ${holiday!.name}` : "",
+                hasPuasa ? `${puasa!.emoji} ${puasa!.title}` : "",
+              ].filter(Boolean).join("\n")}
               aria-label={[
                 day.gregorian.weekday,
                 day.gregorian.day,
                 MONTH_NAMES[day.gregorian.month - 1],
                 day.gregorian.year,
-                `atau ${day.hijri.day} ${HIJRI_MONTH_NAMES[day.hijri.month - 1]} ${day.hijri.year} H`,
+                `${day.hijri.day} ${HIJRI_MONTH_NAMES[day.hijri.month - 1]} ${day.hijri.year} H`,
                 hasHoliday ? holiday!.name : "",
                 hasPuasa ? `Puasa: ${puasa!.title}` : "",
                 day.isJumat ? "Jumat" : "",
                 day.isToday ? "hari ini" : "",
               ].filter(Boolean).join(", ")}
             >
-              {/* Indikator pojok kanan-atas: emoji holiday ATAU dot puasa */}
-              {hasHoliday ? (
-                <span
-                  className="absolute top-1 right-1 text-[10px] leading-none"
+              {/* Row 1: Tanggal Gregorian (besar) - explicit div block */}
+              <div className="text-xl sm:text-2xl font-bold leading-none tabular-nums">
+                {day.gregorian.day}
+              </div>
+
+              {/* Row 2: Tanggal Hijri (kecil, faded) - explicit div block */}
+              <div className="text-[9px] sm:text-[10px] font-semibold leading-none tabular-nums opacity-50 mt-0.5">
+                {day.hijri.day}
+              </div>
+
+              {/* Row 3: Label holiday/puasa (optional) */}
+              <div className="mt-auto w-full text-center min-h-[14px]">
+                {holidayText && (
+                  <div className={cn(
+                    "text-[8px] sm:text-[9px] font-bold leading-tight truncate",
+                    day.isToday ? "text-primary-foreground/95" : "opacity-90",
+                  )}>
+                    {holidayText}
+                  </div>
+                )}
+                {!holidayText && puasaText && (
+                  <div className={cn(
+                    "text-[8px] sm:text-[9px] font-bold leading-tight truncate",
+                    "opacity-75",
+                    day.isToday ? "text-primary-foreground/95" : "",
+                  )}>
+                    {puasaText}
+                  </div>
+                )}
+                {day.puasaSunnah.length > 1 && (
+                  <div className="text-[7px] opacity-60">
+                    +{day.puasaSunnah.length - 1}
+                  </div>
+                )}
+              </div>
+
+              {/* Indikator pojok kanan-atas: emoji holiday */}
+              {hasHoliday && (
+                <div
+                  className="absolute top-1 right-1 text-[10px] sm:text-xs leading-none"
                   aria-hidden="true"
                 >
                   {holiday!.emoji}
-                </span>
-              ) : hasPuasa ? (
-                <span
+                </div>
+              )}
+
+              {/* Vertical accent bar untuk puasa saja (bukan holiday) */}
+              {hasPuasa && !hasHoliday && puasa && (
+                <div
                   className={cn(
-                    "absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full",
-                    PUASA_BAR[puasa!.color] || "bg-violet-500",
+                    "absolute right-0 top-2 bottom-2 w-1 rounded-l-full",
+                    PUASA_BAR[puasa.color] || "bg-violet-500",
                   )}
                   aria-hidden="true"
                 />
-              ) : null}
-
-              {/* Tanggal Gregorian (besar) */}
-              <span
-                className={cn(
-                  "text-xl sm:text-2xl font-bold leading-none tabular-nums",
-                  day.isToday && "scale-110",
-                )}
-              >
-                {day.gregorian.day}
-              </span>
-
-              {/* Tanggal Hijri (kecil, di baris baru) */}
-              <span
-                className={cn(
-                  "text-[9px] sm:text-[10px] font-semibold leading-none tabular-nums opacity-60",
-                )}
-              >
-                {day.hijri.day}
-              </span>
-
-              {/* Label holiday/puasa (hanya muncul kalau ada) */}
-              {(holidayText || puasaText) && (
-                <span
-                  className={cn(
-                    "mt-auto text-center w-full px-0.5",
-                    "text-[8px] sm:text-[9px] font-bold leading-tight",
-                    "line-clamp-1 truncate",
-                    day.isToday ? "text-primary-foreground/95" : "opacity-90",
-                  )}
-                >
-                  {holidayText || puasaText}
-                </span>
               )}
             </div>
           );
@@ -244,11 +239,11 @@ export function HijriCalendar({ year, month, days, onPrev, onNext }: HijriCalend
       </div>
 
       {/* Caption ringkas di bawah grid */}
-      <p className="mt-3 text-center text-[10px] text-muted-foreground">
+      <div className="mt-3 text-center text-[10px] text-muted-foreground">
         Hari besar: <span className="font-semibold text-foreground">{days.filter((d) => d.holidays.length > 0).length}</span>
         {" • "}
         Puasa sunnah: <span className="font-semibold text-foreground">{days.reduce((s, d) => s + d.puasaSunnah.length, 0)}</span> kesempatan
-      </p>
+      </div>
     </div>
   );
 }
