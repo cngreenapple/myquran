@@ -18,7 +18,7 @@ import { useDzikirCounter } from "@/hooks/use-dzikir-counter";
 import { useAppSettings } from "@/hooks/use-app-settings";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { ASMAUL_HUSNA } from "@/data/asmaul-husna";
-import { getTodayInfo, formatFullDate } from "@/lib/hijri";
+import { getTodayInfo, formatFullDate } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 interface IndexProps {
