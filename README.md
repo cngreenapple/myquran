@@ -29,7 +29,7 @@ Aplikasi Al-Qur'an digital modern dengan terjemahan Bahasa Indonesia, audio muro
 - **PWA**: Service Worker + Web App Manifest
 - **Storage**: localStorage (bookmark, notes, stats, dzikir counter)
 - **APIs**: equran.id (Al-Qur'an), Aladhan (jadwal sholat), OSM Nominatim (geocoding)
-- **Testing**: Vitest + @testing-library/react
+- **Testing**: Vitest (unit/component) + Playwright (E2E)
 
 ## 📦 Setup
 
@@ -47,29 +47,66 @@ npm run preview      # Preview production build
 
 ## 🧪 Testing
 
+### Unit & Component Tests (Vitest)
+
 ```bash
-npm test              # Run all tests (single run)
+npm test              # Run all unit tests (single run)
 npm run test:watch    # Watch mode
 npm run test:ui       # Browser-based test explorer
 npm run test:coverage # Generate coverage report
 ```
 
-**Test coverage:**
-- **Lib functions**: ~90% (date, qibla, prayer-times, hijri-calendar, audio-coordinator, share)
-- **Hooks**: ~85% (useReadingStats, useLastRead, useDzikirCounter, useBookmarks, useNotes)
+**Coverage:**
+- **Lib functions**: ~90% (date, qibla, prayer-times, hijri-calendar, share, audio-coordinator)
+- **Hooks**: ~85% (useReadingStats, useLastRead, useDzikirCounter, etc)
 - **Components**: ~70% (VerseCard, DzikirCounterCard, PrayerCard, SurahCard)
 - **Total**: ~80% overall
 
-**Test files:**
-- `src/lib/__tests__/` — Pure functions (date, qibla, prayer-times, hijri-calendar, share, audio-coordinator)
-- `src/hooks/__tests__/` — Custom hooks (useReadingStats)
-- `src/components/__tests__/` — React components (VerseCard, DzikirCounterCard, PrayerCard, SurahCard)
+### E2E Tests (Playwright)
 
-**Test infrastructure:**
-- `src/test/setup.ts` — Vitest setup (localStorage clear, matchMedia mock, ResizeObserver mock)
-- `src/test/test-utils.tsx` — Shared render helper dengan semua provider wrapper
+```bash
+npm run e2e           # Run all E2E tests (chromium, firefox, webkit)
+npm run e2e:ui        # Interactive UI mode
+npm run e2e:debug     # Step-by-step debug mode
 
-## 🚀 Deploy ke Vercel
+# Install browsers (first time only)
+npx playwright install --with-deps
+```
+
+**E2E test coverage:**
+- **Navigation**: Home, drawer, all pages, back button, 404, skip link
+- **Quran browsing**: Search, open surah, bookmark, verify in bookmark page
+- **Dzikir**: Counter increment, target completion, switch pagi/petang
+- **Asmaul Husna**: Grid/list view, search, dialog navigation, copy
+- **Kalender**: Month navigation, today button, holiday markers, upcoming events
+- **PWA**: Manifest validation, service worker registration, offline mode
+
+### Test Files
+
+- `src/lib/__tests__/` — Pure functions (Vitest)
+- `src/hooks/__tests__/` — Custom hooks (Vitest)
+- `src/components/__tests__/` — React components (Vitest + Testing Library)
+- `e2e/` — End-to-end user flows (Playwright)
+
+### Test Infrastructure
+
+- `vitest.config.ts` — Vitest config (jsdom, alias, coverage)
+- `src/test/setup.ts` — Vitest setup (localStorage clear, matchMedia, ResizeObserver mocks)
+- `src/test/test-utils.tsx` — Shared render helper dengan 9 provider wrapper
+- `playwright.config.ts` — Playwright config (multi-browser, webServer)
+
+## 🚀 Deploy
+
+### CI/CD (GitHub Actions)
+
+`.github/workflows/ci.yml` runs on every push & PR:
+1. **Unit & component tests** (Vitest) + coverage report
+2. **E2E tests** (Playwright) di Chromium, Firefox, WebKit
+3. **Lint & type check** (ESLint + TypeScript)
+
+Playwright report di-upload sebagai artifact untuk debugging.
+
+### Vercel
 
 ```bash
 # Install Vercel CLI
@@ -90,22 +127,25 @@ Verifikasi `vercel.json` ada untuk SPA rewrites + cache headers + security heade
 src/
 ├── components/       # Reusable UI components
 │   ├── ui/           # shadcn/ui primitives
-│   ├── __tests__/    # Component tests
+│   ├── __tests__/    # Component tests (Vitest)
 │   └── *.tsx         # Custom components
 ├── pages/            # Route pages (lazy-loaded)
 ├── contexts/         # React Context providers (audio, etc)
 ├── hooks/            # Custom hooks
-│   ├── __tests__/    # Hook tests
+│   ├── __tests__/    # Hook tests (Vitest)
 │   ├── use-*.ts      # State hooks
 │   └── use-*.tsx     # Context providers
 ├── lib/              # Pure functions & utilities
-│   ├── __tests__/    # Lib tests
+│   ├── __tests__/    # Lib tests (Vitest)
 │   └── *.ts          # Implementation
 ├── data/             # Static data (dzikir, doa, asmaul husna, dll)
 ├── types/            # TypeScript type definitions
 ├── utils/            # Helper utilities
 ├── test/             # Test infrastructure
 └── styles/           # Global CSS
+
+e2e/                  # E2E tests (Playwright)
+.github/workflows/    # CI/CD pipelines
 ```
 
 ## 🌐 API Sources
