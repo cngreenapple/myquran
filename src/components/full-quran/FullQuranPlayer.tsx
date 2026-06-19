@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useFullQuranPlayer } from "@/hooks/use-full-quran-player";
@@ -15,15 +15,14 @@ interface FullQuranPlayerProps {
 }
 
 /**
- * Mode Baca Al-Qur'an Full — entry point component.
+ * FullQuranPlayer — mode baca Al-Qur'an full.
  *
- * Komposisi:
- * - useFullQuranPlayer: state & logic orchestrator
- * - useQueueDropdown: dropdown positioning & search
- * - Sub-components: header, progress, controls, expanded actions, dropdown list
- *
- * Component ini hanya orchestrate — tidak ada business logic, tidak ada
- * positioning math, tidak ada DOM events handling.
+ * Anti-glitch strategy (mobile):
+ * - Area expandable di-wrap `SmoothHeight` yang pakai CSS `max-height` transition
+ *   (bukan mount/unmount). Konten tetap di-mount, hanya height yang di-animate.
+ * - `will-change: max-height, opacity` → GPU compositor layer, hindari re-paint.
+ * - `overflow: hidden` cegah bocor saat collapsed.
+ * - Initial mount: skip animasi supaya tidak flash saat page load.
  */
 export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
   const {
@@ -91,6 +90,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
       )}
     >
       <CardContent className="p-3 space-y-2.5">
+        {/* Header — always visible */}
         <PlayerHeader
           currentSurah={currentSurahInfo}
           currentIndex={queue.currentIndex}
@@ -103,53 +103,58 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
           onToggleExpanded={toggleExpanded}
         />
 
-        {queue.isActive && (
-          <PlayerProgress
-            percent={queue.progressPercent}
-            remaining={queue.remaining}
-          />
-        )}
+        {/* Smooth expand: konten tidak di-mount/unmount, height-nya saja yang di-animate */}
+        <SmoothHeight shouldExpand={expanded || queue.isActive}>
+          <div className="space-y-2.5">
+            {queue.isActive && (
+              <PlayerProgress
+                percent={queue.progressPercent}
+                remaining={queue.remaining}
+              />
+            )}
 
-        {queue.isActive && (
-          <PlayerControls
-            isPlaying={audio.isPlaying}
-            isLoading={audio.isLoadingAudio}
-            onTogglePlay={audio.togglePlay}
-            canGoPrev={queue.currentIndex > 0}
-            onPrev={queue.prev}
-            canGoNext={
-              queue.currentIndex < queue.queue.length - 1 ||
-              queue.repeatMode === "queue"
-            }
-            onNext={queue.next}
-            isShuffled={queue.isShuffled}
-            onToggleShuffle={queue.toggleShuffle}
-            repeatMode={queue.repeatMode}
-            onCycleRepeat={queue.cycleRepeat}
-          />
-        )}
+            {queue.isActive && (
+              <PlayerControls
+                isPlaying={audio.isPlaying}
+                isLoading={audio.isLoadingAudio}
+                onTogglePlay={audio.togglePlay}
+                canGoPrev={queue.currentIndex > 0}
+                onPrev={queue.prev}
+                canGoNext={
+                  queue.currentIndex < queue.queue.length - 1 ||
+                  queue.repeatMode === "queue"
+                }
+                onNext={queue.next}
+                isShuffled={queue.isShuffled}
+                onToggleShuffle={queue.toggleShuffle}
+                repeatMode={queue.repeatMode}
+                onCycleRepeat={queue.cycleRepeat}
+              />
+            )}
 
-        {expanded && (
-          <PlayerExpandedActions
-            isSurahListLoading={isSurahListLoading}
-            showRangePicker={showRangePicker}
-            fromNomor={fromNomor}
-            toNomor={toNomor}
-            onOpenRangePicker={openRangePicker}
-            onCloseRangePicker={closeRangePicker}
-            onFromChange={setFromNomor}
-            onToChange={setToNomor}
-            onPlayFull={handlePlayFull}
-            onPlayRange={handlePlayRange}
-            surahList={surahList}
-          />
-        )}
+            {expanded && (
+              <PlayerExpandedActions
+                isSurahListLoading={isSurahListLoading}
+                showRangePicker={showRangePicker}
+                fromNomor={fromNomor}
+                toNomor={toNomor}
+                onOpenRangePicker={openRangePicker}
+                onCloseRangePicker={closeRangePicker}
+                onFromChange={setFromNomor}
+                onToChange={setToNomor}
+                onPlayFull={handlePlayFull}
+                onPlayRange={handlePlayRange}
+                surahList={surahList}
+              />
+            )}
 
-        {queue.isActive && (
-          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Audio akan otomatis lanjut ke surah berikutnya. Tap X untuk berhenti.
-          </p>
-        )}
+            {queue.isActive && (
+              <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                Audio akan otomatis lanjut ke surah berikutnya. Tap X untuk berhenti.
+              </p>
+            )}
+          </div>
+        </SmoothHeight>
       </CardContent>
 
       <QueueDropdown
@@ -166,5 +171,69 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
         }
       />
     </Card>
+  );
+}
+
+// ============================================================================
+// SmoothHeight — height animasi via max-height (tanpa mount/unmount)
+// ============================================================================
+
+interface SmoothHeightProps {
+  shouldExpand: boolean;
+  children: React.ReactNode;
+  durationMs?: number;
+}
+
+/**
+ * SmoothHeight: bungkus children dengan transisi max-height + opacity.
+ *
+ * Logic:
+ * - shouldExpand = true  → max-height: 3000px, opacity: 1
+ * - shouldExpand = false → max-height: 0,     opacity: 0
+ * - Transition: max-height 300ms ease, opacity 200ms ease
+ * - overflow: hidden mencegah overflow saat collapsed
+ * - will-change: GPU compositing
+ * - Initial mount: kalau belum pernah expand dan tidak expand → render tanpa delay
+ *   (hindari animasi flash saat page load)
+ */
+function SmoothHeight({ shouldExpand, children, durationMs = 300 }: SmoothHeightProps) {
+  const [hasEverExpanded, setHasEverExpanded] = useState(false);
+  const prevRef = useRef(shouldExpand);
+
+  useEffect(() => {
+    if (shouldExpand && !prevRef.current) {
+      setHasEverExpanded(true);
+    }
+    prevRef.current = shouldExpand;
+  }, [shouldExpand]);
+
+  const isOpen = shouldExpand;
+
+  // Initial mount (belum pernah expand & tidak expand) → render 0-height tanpa transition
+  if (!isOpen && !hasEverExpanded) {
+    return (
+      <div
+        className="overflow-hidden"
+        style={{ maxHeight: 0, opacity: 0, willChange: "max-height, opacity" }}
+        aria-hidden
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="overflow-hidden"
+      style={{
+        maxHeight: isOpen ? 3000 : 0,
+        opacity: isOpen ? 1 : 0,
+        willChange: "max-height, opacity",
+        transition: `max-height ${durationMs}ms ease, opacity 200ms ease`,
+      }}
+      aria-hidden={!isOpen}
+    >
+      {children}
+    </div>
   );
 }
