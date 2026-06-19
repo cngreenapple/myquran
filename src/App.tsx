@@ -40,18 +40,36 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const KalenderPage = lazy(() => import("./pages/KalenderPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+/**
+ * Stop audio player saat route berubah.
+ *
+ * Tanpa ini, user navigate dari /surat/1 (audio playing) ke /settings
+ * → audio masih jalan di background. Side effects: audio leak,
+ * NavigationDrawer tidak bisa buka (audio state stuck), dst.
+ *
+ * Pakai ref untuk capture latest `stop` function — `stop` dari
+ * useAudio stabil reference kecuali audio context berubah, dan kita
+ * tidak perlu re-subscribe event handler kalau itu terjadi.
+ */
 function RouteAudioStopper() {
   const location = useLocation();
   const surahAudio = useAudio();
   const ayatAudio = useAyatAudio();
   const stopSurahRef = useRef(surahAudio.stop);
   const stopAyatRef = useRef(ayatAudio.stop);
-  useEffect(() => { stopSurahRef.current = surahAudio.stop; }, [surahAudio.stop]);
-  useEffect(() => { stopAyatRef.current = ayatAudio.stop; }, [ayatAudio.stop]);
+
+  useEffect(() => {
+    stopSurahRef.current = surahAudio.stop;
+  }, [surahAudio.stop]);
+  useEffect(() => {
+    stopAyatRef.current = ayatAudio.stop;
+  }, [ayatAudio.stop]);
+
   useEffect(() => {
     stopSurahRef.current();
     stopAyatRef.current();
   }, [location.pathname]);
+
   return null;
 }
 
@@ -62,12 +80,8 @@ function AppShell() {
    * Handler untuk buka drawer.
    *
    * `setDrawerOpen` dari useState sudah stabil reference-nya, jadi useCallback
-   * dengan deps [] sebenarnya redundant. Tapi explicit lebih jelas intent-nya.
-   *
-   * Handler ini di-pass ke semua page yang punya Header supaya tombol menu
-   * (hamburger) bisa buka drawer. Page yang tidak terima `onMenuClick` prop
-   * akan punya tombol menu yang tidak bisa di-klik (silent noop via Header's
-   * default).
+   * dengan deps [] sebenarnya redundant. Tapi explicit lebih jelas intent-nya
+   * dan best practice untuk konsistensi dengan handler lain.
    */
   const openDrawer = useCallback(() => {
     setDrawerOpen(true);
@@ -135,8 +149,8 @@ const App = () => (
               </DzikirProvider>
             </NotesProvider>
           </BookmarkProvider>
-        </ReadingStatsProvider>
-      </AppSettingsProvider>
+        </LastReadProvider>
+      </ReadingStatsProvider>
     </AppSettingsProvider>
   </QueryClientProvider>
 );
