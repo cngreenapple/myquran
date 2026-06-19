@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, Heart, Globe, Mail, Star } from "lucide-react";
+import { ArrowLeft, BookOpen, Heart, Info, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useDocumentTitle } from "@/hooks/use-document-title";
-import { ASMAUL_HUSNA } from "@/data/asmaul-husna";
 import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
@@ -88,20 +87,7 @@ export default function AboutPage() {
               <DataSourceItem title="Al-Qur'an & Terjemahan" source="EQuran.id" url="https://equran.id" description="API Al-Qur'an lengkap dengan terjemahan Bahasa Indonesia, tafsir Kemenag, dan audio murottal." />
               <DataSourceItem title="Jadwal Sholat" source="Aladhan.com" url="https://aladhan.com" description="API jadwal sholat global dengan metode kalkulasi berbagai negara termasuk KEMENAG Indonesia." />
               <DataSourceItem title="Audio Murottal" source="QuranicAudio.com" url="https://quranicaudio.com" description="Audio murottal Al-Afasy untuk tilawah Al-Qur'an." />
-              <DataSourceItem title="Konversi Kalender Hijriah" source="Umm al-Qura Algorithm" description="Algoritma konversi kalender Hijriah-Masehi resmi Arab Saudi." />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent mb-3">
-          <CardContent className="p-4">
-            <h2 className="text-sm font-bold text-foreground mb-1.5 flex items-center gap-2">
-              <span className="text-lg" aria-hidden="true">✨</span>99 Asmaul Husna
-            </h2>
-            <p className="text-xs text-foreground/85 leading-relaxed mb-1">
-              Aplikasi menyediakan 99 nama-nama Allah yang indah beserta artinya dalam Bahasa Indonesia dan Inggris.
-            </p>
-            <p className="text-[10px] text-muted-foreground">Total: {ASMAUL_HUSNA.length} nama</p>
           </CardContent>
         </Card>
 
@@ -121,16 +107,8 @@ export default function AboutPage() {
 
         <Card className="border-border/60">
           <CardContent className="p-2">
-            <a href="https://equran.id" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors">
-              <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              <div className="flex-1"><p className="text-xs font-medium text-foreground">equran.id</p><p className="text-[10px] text-muted-foreground">Sumber Al-Qur'an</p></div>
-            </a>
-            <a href="https://aladhan.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors">
-              <Globe className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
-              <div className="flex-1"><p className="text-xs font-medium text-foreground">aladhan.com</p><p className="text-[10px] text-muted-foreground">Sumber jadwal sholat</p></div>
-            </a>
             <button className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-colors text-left">
-              <Mail className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+              <Info className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
               <div className="flex-1"><p className="text-xs font-medium text-foreground">Kontak</p><p className="text-[10px] text-muted-foreground">Untuk masukan & saran</p></div>
             </button>
           </CardContent>
