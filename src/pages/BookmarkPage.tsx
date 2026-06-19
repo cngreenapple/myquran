@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, Bookmark as BookmarkIcon, Trash2, BookOpen, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, Bookmark as BookmarkIcon, Trash2, BookOpen, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import {
@@ -32,6 +32,12 @@ export default function BookmarkPage({ onMenuClick }: BookmarkPageProps) {
     <div className="min-h-dvh bg-background">
       <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="bookmark-title">
+        <Button variant="ghost" asChild className="mb-3 -ml-2 rounded-full h-8" size="sm">
+          <Link to="/">
+            <ArrowLeft className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+            <span className="text-xs">Kembali</span>
+          </Link>
+        </Button>
         <section className="mb-4">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div>
