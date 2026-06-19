@@ -23,6 +23,7 @@ const queryClient = new QueryClient({
 
 const Index = lazy(() => import("./pages/Index"));
 const SuratDetail = lazy(() => import("./pages/SuratDetail"));
+const QuranReader = lazy(() => import("./pages/QuranReader"));
 const Settings = lazy(() => import("./pages/Settings"));
 const PrayerTimes = lazy(() => import("./pages/PrayerTimes"));
 const Dzikir = lazy(() => import("./pages/Dzikir"));
@@ -62,6 +63,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<Index onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/surat/:id" element={<SuratDetail onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/baca/:id" element={<QuranReader />} />
           <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/dzikir" element={<Dzikir onMenuClick={() => setDrawerOpen(true)} />} />
           <Route path="/doa" element={<Doa onMenuClick={() => setDrawerOpen(true)} />} />

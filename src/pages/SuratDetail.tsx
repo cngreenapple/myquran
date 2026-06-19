@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Play, MapPin, BookOpen } from "lucide-react";
+import { ArrowLeft, Play, MapPin, BookOpen, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { VerseCard } from "@/components/VerseCard";
@@ -149,19 +149,32 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
             </svg>
           </div>
           <div className="relative">
-            <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center justify-between gap-2 mb-3">
               <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-sm text-[9px] font-bold uppercase tracking-wider">
                 Surah {data.nomor}
               </div>
-              <Button
-                onClick={handlePlayToggle}
-                size="sm"
-                className="h-7 px-2.5 rounded-full gap-1.5 text-[11px] font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
-                aria-label={isCurrentPlaying ? "Jeda audio" : "Putar audio murottal"}
-              >
-                <Play className={cn("w-3 h-3", isCurrentPlaying && "animate-pulse")} aria-hidden="true" />
-                {isCurrentPlaying ? "Jeda" : "Putar Full"}
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  asChild
+                  size="sm"
+                  className="h-7 px-2.5 rounded-full gap-1.5 text-[11px] font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/15 backdrop-blur-sm"
+                  aria-label="Buka mode baca fokus (mushaf)"
+                >
+                  <Link to={`/baca/${data.nomor}`}>
+                    <Maximize2 className="w-3 h-3" aria-hidden="true" />
+                    <span className="hidden sm:inline">Baca Fokus</span>
+                  </Link>
+                </Button>
+                <Button
+                  onClick={handlePlayToggle}
+                  size="sm"
+                  className="h-7 px-2.5 rounded-full gap-1.5 text-[11px] font-semibold bg-white/20 hover:bg-white/30 text-white border border-white/20 backdrop-blur-sm"
+                  aria-label={isCurrentPlaying ? "Jeda audio" : "Putar audio murottal"}
+                >
+                  <Play className={cn("w-3 h-3", isCurrentPlaying && "animate-pulse")} aria-hidden="true" />
+                  {isCurrentPlaying ? "Jeda" : "Putar Full"}
+                </Button>
+              </div>
             </div>
             <div className="text-center mb-3">
               <p className="font-arabic text-4xl sm:text-5xl mb-2 leading-none" dir="rtl" lang="ar" aria-label={`Nama Arab: ${data.nama}`}>
