@@ -45,7 +45,7 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
   useDocumentTitle("Tasbih Digital");
   const { getState, increment, reset, resetAll, totalCyclesToday } = useTasbihCounter();
 
-  const [activePresetId, setActivePresetId] = useState<string>(TASBIH_PRESETS[0].id);
+  const [activePresetId, setActivePresetId] = useState(TASBIH_PRESETS[0].id);
   const [confirmResetAllOpen, setConfirmResetAllOpen] = useState(false);
 
   const activePreset = useMemo(
@@ -57,7 +57,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
   const isComplete = state.current >= activePreset.target;
   const colors = colorMap[activePreset.color];
 
-  // Count presets yang sudah completed hari ini
   const completedTodayCount = useMemo(() => {
     return TASBIH_PRESETS.filter((p) => {
       const s = getState(p);
@@ -100,7 +99,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
           </h1>
         </section>
 
-        {/* Stats ringkasan */}
         <Card className="mb-4 border-border/60 bg-gradient-to-r from-primary/5 via-card to-card">
           <CardContent className="p-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -136,7 +134,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
           </CardContent>
         </Card>
 
-        {/* Preset selector — horizontal scroll */}
         <div
           className="-mx-3 px-3 overflow-x-auto no-scrollbar mb-5"
           role="tablist"
@@ -181,10 +178,8 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
           </div>
         </div>
 
-        {/* Dial card */}
         <Card className={cn("mb-4 border-2 overflow-hidden transition-all", colors.ring, colors.bg)}>
           <CardContent className="p-5 sm:p-6">
-            {/* Active dzikir info */}
             <div className="text-center mb-4">
               <p
                 className={cn("font-arabic text-2xl sm:text-3xl leading-relaxed", colors.text)}
@@ -202,7 +197,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
               </p>
             </div>
 
-            {/* Progress dial */}
             <div className="flex justify-center">
               <TasbihDial
                 percent={percent}
@@ -215,7 +209,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
               />
             </div>
 
-            {/* Total cycles info */}
             <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
               <Sparkles className="w-3 h-3" aria-hidden="true" />
               <span>
@@ -228,7 +221,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
           </CardContent>
         </Card>
 
-        {/* Tips card */}
         <Card className="border-border/60 bg-muted/30">
           <CardContent className="p-3.5">
             <div className="flex items-start gap-2.5">
