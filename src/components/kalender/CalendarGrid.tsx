@@ -12,10 +12,12 @@ import {
   ISLAMIC_HOLIDAYS,
   type IslamicHoliday,
   getHolidayOnDate,
+  getHolidaysInMonth,
 } from "@/data/islamic-holidays";
 import { colorClasses } from "./constants";
 import { CalendarHeader } from "./CalendarHeader";
 import { WeekdayRow } from "./WeekdayRow";
+import { HolidaysInMonthList } from "./HolidaysInMonthList";
 
 /**
  * CalendarGrid: kalender kombinasi Hijriah + Masehi dalam 1 grid.
@@ -84,6 +86,15 @@ export function CalendarGrid({ today: todayProp }: CalendarGridProps) {
     return arr;
   }, [gregInfo, gregYear, gregMonth, today]);
 
+  /**
+   * Holiday untuk bulan Hijriah yang sedang ditampilkan.
+   * Pakai helper getHolidaysInMonth dari islamic-holidays.ts.
+   */
+  const holidaysInMonth = useMemo(
+    () => getHolidaysInMonth(hijriMonth),
+    [hijriMonth],
+  );
+
   const goPrev = () => {
     if (hijriMonth === 1) {
       setHijriMonth(12);
@@ -130,123 +141,132 @@ export function CalendarGrid({ today: todayProp }: CalendarGridProps) {
   const title = `${GREGORIAN_MONTH_NAMES[gregMonth]} ${gregYear}`;
 
   return (
-    <Card className="border-border/60 overflow-hidden">
-      <CardContent className="p-3.5">
-        {/* Title — both Hijriah & Masehi */}
-        <CalendarHeader
-          subtitle="🌙📅 Hijriah & Masehi"
-          subtitleClassName="text-violet-600 dark:text-violet-400"
-          title={title}
-          onPrev={goPrev}
-          onNext={goNext}
-        />
+    <div className="space-y-3">
+      <Card className="border-border/60 overflow-hidden">
+        <CardContent className="p-3.5">
+          {/* Title — both Hijriah & Masehi */}
+          <CalendarHeader
+            subtitle="🌙📅 Hijriah & Masehi"
+            subtitleClassName="text-violet-600 dark:text-violet-400"
+            title={title}
+            onPrev={goPrev}
+            onNext={goNext}
+          />
 
-        {/* Subtitle with Hijri month */}
-        <div className="text-center mb-3 -mt-1.5">
-          <p className="text-[11px] text-muted-foreground font-medium">
-            {hijriMonthNames[hijriMonth - 1]} {hijriYear} H
-          </p>
-        </div>
+          {/* Subtitle with Hijri month */}
+          <div className="text-center mb-3 -mt-1.5">
+            <p className="text-[11px] text-muted-foreground font-medium">
+              {hijriMonthNames[hijriMonth - 1]} {hijriYear} H
+            </p>
+          </div>
 
-        <WeekdayRow />
+          <WeekdayRow />
 
-        {/* Combined grid — both numbers per cell */}
-        <div className="grid grid-cols-7 gap-1" role="grid" aria-label={title}>
-          {cells.map((cell, idx) => {
-            if (cell.gregDay === 0) return <div key={idx} aria-hidden="true" />;
-            const c = cell.holiday ? colorClasses[cell.holiday.color] : null;
-            const isTodayStyle = cell.isToday;
-            const baseClass = cn(
-              "relative aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-semibold transition-all",
-              isTodayStyle
-                ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
-                : c
+          {/* Combined grid — both numbers per cell */}
+          <div className="grid grid-cols-7 gap-1" role="grid" aria-label={title}>
+            {cells.map((cell, idx) => {
+              if (cell.gregDay === 0) return <div key={idx} aria-hidden="true" />;
+              const c = cell.holiday ? colorClasses[cell.holiday.color] : null;
+              const isTodayStyle = cell.isToday;
+              const baseClass = cn(
+                "relative aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-semibold transition-all",
+                isTodayStyle
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                  : c
                 ? `${c.text} ${c.emojiBg} ring-1 ${c.ring}`
                 : "text-foreground hover:bg-muted",
-            );
+              );
 
-            return (
-              <div
-                key={idx}
-                className={baseClass}
-                role="gridcell"
-                aria-label={
-                  cell.holiday
-                    ? `${cell.gregDay} ${GREGORIAN_MONTH_NAMES[gregMonth]} ${gregYear} / ${cell.hijriDay} ${hijriMonthNames[hijriMonth - 1]} - ${cell.holiday.name}`
-                    : `${cell.gregDay} ${GREGORIAN_MONTH_NAMES[gregMonth]} ${gregYear} / ${cell.hijriDay} ${hijriMonthNames[hijriMonth - 1]}`
-                }
-                title={cell.holiday?.name}
-              >
-                {/* Hijriah number (small, top) */}
-                <span
-                  className={cn(
-                    "tabular-nums leading-none text-[9px] font-medium",
-                    isTodayStyle
-                      ? "text-primary-foreground/80"
-                      : c
-                      ? c.text
-                      : "text-muted-foreground",
-                  )}
+              return (
+                <div
+                  key={idx}
+                  className={baseClass}
+                  role="gridcell"
+                  aria-label={
+                    cell.holiday
+                      ? `${cell.gregDay} ${GREGORIAN_MONTH_NAMES[gregMonth]} ${gregYear} / ${cell.hijriDay} ${hijriMonthNames[hijriMonth - 1]} - ${cell.holiday.name}`
+                      : `${cell.gregDay} ${GREGORIAN_MONTH_NAMES[gregMonth]} ${gregYear} / ${cell.hijriDay} ${hijriMonthNames[hijriMonth - 1]}`
+                  }
+                  title={cell.holiday?.name}
                 >
-                  {cell.hijriDay}
-                </span>
-
-                {/* Masehi number (primary, bottom) */}
-                <span
-                  className={cn(
-                    "tabular-nums leading-none text-sm font-bold",
-                    isTodayStyle
-                      ? "text-primary-foreground"
-                      : c
-                      ? c.text
-                      : "text-foreground",
-                  )}
-                >
-                  {cell.gregDay}
-                </span>
-
-                {/* Holiday emoji (bottom-right corner) */}
-                {cell.holiday && (
+                  {/* Hijriah number (small, top) */}
                   <span
-                    className="absolute bottom-0.5 right-1 text-[7px] leading-none"
-                    aria-hidden="true"
+                    className={cn(
+                      "tabular-nums leading-none text-[9px] font-medium",
+                      isTodayStyle
+                        ? "text-primary-foreground/80"
+                        : c
+                        ? c.text
+                        : "text-muted-foreground",
+                    )}
                   >
-                    {cell.holiday.emoji}
+                    {cell.hijriDay}
                   </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
 
-        {/* Today button */}
-        <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
-          <button
-            onClick={goToday}
-            className="text-[10px] text-primary font-semibold hover:underline px-2 py-1 rounded-md hover:bg-muted"
-          >
-            📍 Kembali ke hari ini
-          </button>
-          <p className="text-[10px] text-muted-foreground">
-            {cells.filter((c) => c.gregDay > 0).length} hari • {cells.filter((c) => c.holiday).length} hari besar
-          </p>
-        </div>
+                  {/* Masehi number (primary, bottom) */}
+                  <span
+                    className={cn(
+                      "tabular-nums leading-none text-sm font-bold",
+                      isTodayStyle
+                        ? "text-primary-foreground"
+                        : c
+                        ? c.text
+                        : "text-foreground",
+                    )}
+                  >
+                    {cell.gregDay}
+                  </span>
 
-        {/* Mini-legend */}
-        <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
-          {ISLAMIC_HOLIDAYS.slice(0, 5).map((h) => {
-            const c = colorClasses[h.color];
-            return (
-              <div key={h.id} className="flex items-center gap-1">
-                <span className={cn("w-2 h-2 rounded shrink-0", c.dot)} />
-                <span className="text-[9px] text-foreground/70 font-medium whitespace-nowrap">
-                  {h.emoji} {h.name}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                  {/* Holiday emoji (bottom-right corner) */}
+                  {cell.holiday && (
+                    <span
+                      className="absolute bottom-0.5 right-1 text-[7px] leading-none"
+                      aria-hidden="true"
+                    >
+                      {cell.holiday.emoji}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Today button */}
+          <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+            <button
+              onClick={goToday}
+              className="text-[10px] text-primary font-semibold hover:underline px-2 py-1 rounded-md hover:bg-muted"
+            >
+              📍 Kembali ke hari ini
+            </button>
+            <p className="text-[10px] text-muted-foreground">
+              {cells.filter((c) => c.gregDay > 0).length} hari • {cells.filter((c) => c.holiday).length} hari besar
+            </p>
+          </div>
+
+          {/* Mini-legend */}
+          <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
+            {ISLAMIC_HOLIDAYS.slice(0, 5).map((h) => {
+              const c = colorClasses[h.color];
+              return (
+                <div key={h.id} className="flex items-center gap-1">
+                  <span className={cn("w-2 h-2 rounded shrink-0", c.dot)} />
+                  <span className="text-[9px] text-foreground/70 font-medium whitespace-nowrap">
+                    {h.emoji} {h.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Section baru: daftar hari besar / istimewa di bulan Hijriah aktif */}
+      <HolidaysInMonthList
+        holidays={holidaysInMonth}
+        hijriMonthName={hijriMonthNames[hijriMonth - 1]}
+        hijriYear={hijriYear}
+      />
+    </div>
   );
 }
