@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Search, BookOpen, Clock, BookHeart, Hand, Star,
   Compass, Moon, ArrowRight, Calendar, CircleDot,
+  ListMusic,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -39,23 +40,14 @@ const QUICK_ACTIONS = [
 ] as const;
 
 const colorMap = {
-  // Biru cerah — Sholat (waktu, langit, ketenangan)
   sky: { bg: "bg-sky-500/8", text: "text-sky-600 dark:text-sky-400", grad: "from-sky-500 to-sky-700" },
-  // Hijau — Dzikir (subhanallah, primary brand)
   emerald: { bg: "bg-emerald-500/8", text: "text-emerald-600 dark:text-emerald-400", grad: "from-emerald-500 to-emerald-700" },
-  // Merah muda — Tasbih (counter rhythmical, energy)
   rose: { bg: "bg-rose-500/8", text: "text-rose-600 dark:text-rose-400", grad: "from-rose-500 to-rose-700" },
-  // Kuning hangat — Doa (harapan, doa dipanjatkan)
   amber: { bg: "bg-amber-500/8", text: "text-amber-600 dark:text-amber-400", grad: "from-amber-500 to-amber-700" },
-  // Ungu — Asmaul Husna (sifat-sifat Allah, misterius)
   violet: { bg: "bg-violet-500/8", text: "text-violet-600 dark:text-violet-400", grad: "from-violet-500 to-violet-700" },
-  // Hijau-biru — Kiblat (kompas, arah, navigasi)
   teal: { bg: "bg-teal-500/8", text: "text-teal-600 dark:text-teal-400", grad: "from-teal-500 to-teal-700" },
-  // Biru tua — Kalender (terstruktur, formal)
   indigo: { bg: "bg-indigo-500/8", text: "text-indigo-600 dark:text-indigo-400", grad: "from-indigo-500 to-indigo-700" },
-  // Pink-ungu tua — Puasa (spiritual, transformasi)
   fuchsia: { bg: "bg-fuchsia-500/8", text: "text-fuchsia-600 dark:text-fuchsia-400", grad: "from-fuchsia-500 to-fuchsia-700" },
-  // Oranye — Bookmark (penanda, attention)
   orange: { bg: "bg-orange-500/8", text: "text-orange-600 dark:text-orange-400", grad: "from-orange-500 to-orange-700" },
 };
 
@@ -149,24 +141,6 @@ export default function Index({ onMenuClick }: IndexProps) {
               </div>
             </div>
           </div>
-        </section>
-
-        {/*
-          FullQuranPlayer di section terpisah dengan padding-bottom eksplisit.
-          Anti-glitch: section ini punya min-height konsisten supaya saat
-          player expand/collapse, layout shift tidak terasa di section lain.
-
-          Trick: gunakan `style={{ contain: "layout" }}` pada wrapper supaya
-          internal expansion FullQuranPlayer tidak trigger reflow ke siblings.
-          Plus `overflowAnchor: none` di <main> supaya scroll position
-          tidak auto-adjust (browser's scroll anchoring) saat DOM berubah.
-        */}
-        <section
-          className="mb-4"
-          aria-label="Mode baca Al-Qur'an full"
-          style={{ contain: "layout" }}
-        >
-          <FullQuranPlayer />
         </section>
 
         <section className="mb-4" aria-label="Akses cepat">
@@ -266,6 +240,35 @@ export default function Index({ onMenuClick }: IndexProps) {
               <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
             </div>
           </Link>
+        </section>
+
+        {/* FullQuranPlayer — dipindahkan dari posisi paling atas ke sini,
+            tepat di atas section "Daftar Surat".
+            *
+            * Alasan layout:
+            * 1. Player adalah **browsing tool** (untuk play sequence surah)
+            *    → logically berdekatan dengan "Daftar Surat" yang juga browsing tool
+            * 2. Quick actions, stats, last read, calendar, dll adalah **context cards**
+            *    yang user scan dulu sebelum decide mau "browse" atau "play"
+            * 3. Visual flow: Hero (greeting) → Quick actions (shortcuts) → Context (stats/dates)
+            *    → Browse options (Daftar Surat atau Play Full) → Content
+            *
+            * Anti-glitch: section ini punya `contain: layout` supaya internal
+            * expand/collapse FullQuranPlayer (range picker, queue dropdown)
+            * tidak trigger reflow ke siblings di atas/bawah.
+            */}
+        <section
+          className="mb-4"
+          aria-label="Mode baca Al-Qur'an full"
+          style={{ contain: "layout" }}
+        >
+          <div className="flex items-center gap-1.5 mb-2 px-1">
+            <ListMusic className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <h2 className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              Mode Baca Full
+            </h2>
+          </div>
+          <FullQuranPlayer />
         </section>
 
         <section className="mb-3">
