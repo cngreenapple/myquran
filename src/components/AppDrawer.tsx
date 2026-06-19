@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Bookmark, StickyNote, Clock, Star, BookHeart, Hand,
   Compass, Moon, Calendar, Video, Info, X, ArrowUp, Settings,
-  CircleDot, Download, Check,
+  CircleDot, Download, Check, Share, Plus,
 } from "lucide-react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { cn } from "@/lib/utils";
@@ -55,12 +55,37 @@ const SECTIONS: Array<{ title: string; items: NavItem[] }> = [
   { title: "Lainnya", items: LAINNYA },
 ];
 
+/**
+ * Detect iOS Safari specifically (not just any Safari on any OS).
+ *
+ * iPadOS reports as Mac in userAgent since iPadOS 13 — pakai
+ * `navigator.maxTouchPoints > 0` + Mac UA sebagai fallback.
+ *
+ * Returns true hanya kalau device iOS/iPadOS + browser Safari/Chrome/Firefox on iOS.
+ */
+function isIOSDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  // iPhone/iPod
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  // iPadOS 13+ reports as Mac + touch
+  if (
+    ua.includes("Mac") &&
+    typeof navigator.maxTouchPoints === "number" &&
+    navigator.maxTouchPoints > 0
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function AppDrawer({ open, onOpenChange }: AppDrawerProps) {
   const location = useLocation();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const { isInstallable, isInstalled, promptInstall } = usePWA();
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -105,19 +130,7 @@ export function AppDrawer({ open, onOpenChange }: AppDrawerProps) {
   };
 
   /**
-   * Trigger native install prompt.
-   *
-   * Flow:
-   * 1. `promptInstall()` show browser's native install dialog
-   * 2. User accepts/dismisses
-   * 3. Toast feedback sesuai outcome
-   * 4. Drawer auto-close supaya user lihat feedback toast
-   *
-   * Edge cases:
-   * - Kalau `isInstallable === false` (mis. iOS Safari yang gak support
-   *   beforeinstallprompt), button ini gak akan render — jadi handler
-   *   ini gak akan dipanggil dari draw state
-   * - Kalau `isInstalled === true`, button juga gak render
+   * Trigger native install prompt (Android/Desktop Chrome only).
    */
   const handleInstall = async () => {
     try {
@@ -233,25 +246,14 @@ export function AppDrawer({ open, onOpenChange }: AppDrawerProps) {
               </div>
             ))}
 
-            {/* Section "Akses Cepat" — PWA Install button (conditional).
-             *
-             * Show only when:
-             * - isInstallable = true (browser fired beforeinstallprompt event)
-             * - isInstalled = false (user belum install as PWA)
-             *
-             * Hidden when:
-             * - Already installed (button would be redundant)
-             * - Browser doesn't support (iOS Safari) — no native prompt available
-             *   (Catatan: iOS Safari gak support beforeinstallprompt, jadi
-             *   isInstallable selalu false. User di iOS harus manual install
-             *   via Share → Add to Home Screen, gak bisa pakai native dialog)
-             */}
-            {isInstallable && !isInstalled && (
-              <div className="mt-3 mb-1">
-                <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">
-                  Akses Cepat
-                </p>
-                <ul className="space-y-0.5" role="list">
+            {/* === Section "Akses Cepat" — PWA Install (3 variants) === */}
+            <div className="mt-3 mb-1">
+              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">
+                Akses Cepat
+              </p>
+              <ul className="space-y-0.5" role="list">
+                {/* Variant 1: Install prompt tersedia (Android/Desktop Chrome) */}
+                {isInstallable && !isInstalled && (
                   <li>
                     <button
                       type="button"
@@ -271,19 +273,10 @@ export function AppDrawer({ open, onOpenChange }: AppDrawerProps) {
                       </span>
                     </button>
                   </li>
-                </ul>
-              </div>
-            )}
+                )}
 
-            {/* Installed indicator — visual confirmation kalau app sudah ke-install.
-             * Read-only display (no click), pakai icon Check dengan styling subtle.
-             * Tampil hanya kalau isInstalled = true (i.e. user udah pernah install). */}
-            {isInstalled && (
-              <div className="mt-3 mb-1">
-                <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300/60">
-                  Akses Cepat
-                </p>
-                <ul className="space-y-0.5" role="list">
+                {/* Variant 2: Sudah ter-install (display only, no action) */}
+                {isInstalled && (
                   <li>
                     <div
                       className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] font-medium text-emerald-200/60"
@@ -299,7 +292,93 @@ export function AppDrawer({ open, onOpenChange }: AppDrawerProps) {
                       <span className="truncate flex-1 text-left">App Terinstall</span>
                     </div>
                   </li>
-                </ul>
+                )}
+
+                {/* Variant 3: iOS Safari (no beforeinstallprompt support) —
+                 * kasih instruksi manual install via Share menu.
+                 *
+                 * Tampil hanya kalau:
+                 * - Device adalah iOS/iPadOS
+                 * - App BELUM ter-install (kalau sudah, tampil variant 2 di atas)
+                 * - Tidak ada install prompt (kalau ada, tampil variant 1)
+                 */}
+                {!isInstalled && !isInstallable && isIOSDevice() && (
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setShowIOSInstructions(true)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[14px] font-medium transition-all text-emerald-50/90 hover:bg-white/5 group"
+                      aria-label="Cara install di iOS"
+                      aria-expanded={showIOSInstructions}
+                    >
+                      <div
+                        className="w-[18px] h-[18px] shrink-0 rounded-md bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"
+                        aria-hidden="true"
+                      >
+                        <Download className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                      </div>
+                      <span className="truncate flex-1 text-left">Install di iPhone</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 shrink-0">
+                        Tap
+                      </span>
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            {/* iOS Install Instructions Modal — inline expandable.
+             * Ditampilkan di bawah drawer nav sebagai overlay supaya
+             * user lihat step-by-step tanpa kehilangan konteks menu.
+             * Tapi kita pakai simple expandable di dalam drawer saja
+             * untuk UX yang lebih clean. */}
+            {showIOSInstructions && (
+              <div className="mx-2 my-2 p-3 rounded-xl bg-emerald-900/50 border border-emerald-500/30 backdrop-blur-sm animate-fade-in">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+                    📱 Cara Install di iOS
+                  </p>
+                  <button
+                    onClick={() => setShowIOSInstructions(false)}
+                    className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center text-emerald-200"
+                    aria-label="Tutup instruksi"
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
+                </div>
+                <ol className="space-y-1.5 text-[11px] text-emerald-50/90">
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500/30 text-emerald-200 flex items-center justify-center text-[9px] font-bold mt-0.5">
+                      1
+                    </span>
+                    <span>
+                      Tap tombol <Share className="inline w-3 h-3 text-emerald-300" />{" "}
+                      <strong>Share</strong> di bar browser
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500/30 text-emerald-200 flex items-center justify-center text-[9px] font-bold mt-0.5">
+                      2
+                    </span>
+                    <span>
+                      Scroll ke bawah, pilih{" "}
+                      <strong>
+                        <Plus className="inline w-3 h-3 text-emerald-300" /> Add to Home Screen
+                      </strong>
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-emerald-500/30 text-emerald-200 flex items-center justify-center text-[9px] font-bold mt-0.5">
+                      3
+                    </span>
+                    <span>
+                      Tap <strong>Add</strong> di pojok kanan atas
+                    </span>
+                  </li>
+                </ol>
+                <p className="text-[10px] text-emerald-200/70 italic mt-2 leading-relaxed">
+                  Setelah ter-install, app akan muncul di home screen seperti aplikasi native dan dapat digunakan offline.
+                </p>
               </div>
             )}
           </nav>

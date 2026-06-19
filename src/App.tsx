@@ -17,6 +17,7 @@ import { AppDrawer } from "@/components/AppDrawer";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { PWAStatusBar } from "@/components/PWAStatusBar";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
+import { useServiceWorker } from "@/hooks/use-service-worker";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +42,20 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const KalenderPage = lazy(() => import("./pages/KalenderPage"));
 const Tasbih = lazy(() => import("./pages/Tasbih"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+/**
+ * PWA Initializer — register Service Worker di app startup.
+ *
+ * Browser WAJIB punya SW registered sebelum fire `beforeinstallprompt`
+ * event. Kalau SW tidak ada, `usePWA()` `isInstallable` akan selalu false,
+ * dan tombol Install (baik di banner maupun drawer) tidak akan pernah muncul.
+ *
+ * Pattern: hidden component dengan useEffect, di-mount sekali di root AppShell.
+ */
+function PWAInitializer() {
+  useServiceWorker();
+  return null;
+}
 
 /**
  * Stop audio player saat route berubah.
@@ -76,6 +91,7 @@ function AppShell() {
 
   return (
     <>
+      <PWAInitializer />
       <AppDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
       <RouteAudioStopper />
       <Suspense
