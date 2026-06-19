@@ -14,17 +14,18 @@ export function StatsCard() {
   ];
 
   return (
-    <div className="flex items-stretch gap-1 p-1.5 rounded-2xl border border-border/60 bg-card">
-      {items.map((item, i) => {
+    <div className="flex items-stretch gap-1.5 p-1.5 rounded-2xl border border-border/60 bg-card">
+      {items.map((item) => {
         const Icon = item.icon;
         return (
           <div
             key={item.label}
             className={cn(
-              "flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1.5 rounded-xl",
+              "flex-1 min-w-0 flex flex-col items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-center",
               item.accent ? "bg-orange-500/8" : "bg-muted/40",
             )}
           >
+            {/* Icon — top, centered */}
             <div
               className={cn(
                 "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
@@ -34,21 +35,21 @@ export function StatsCard() {
             >
               <Icon className="w-3.5 h-3.5" />
             </div>
-            <div className="min-w-0 flex-1 flex flex-col">
-              {/* Row angka + suffix — satu baris, no wrap */}
-              <p className="text-sm font-bold tabular-nums leading-none truncate flex items-baseline gap-0.5">
-                <span>{item.value}</span>
-                {item.suffix && (
-                  <span className="text-[9px] text-muted-foreground font-medium whitespace-nowrap shrink-0">
-                    {item.suffix}
-                  </span>
-                )}
-              </p>
-              {/* Label — baris terpisah, truncate aman */}
-              <p className="text-[9px] text-muted-foreground leading-none mt-1 uppercase tracking-wide font-semibold truncate">
-                {item.label}
-              </p>
-            </div>
+
+            {/* Value + suffix — single line, no wrap */}
+            <p className="text-sm font-bold tabular-nums leading-none flex items-baseline justify-center gap-0.5">
+              <span>{item.value}</span>
+              {item.suffix && (
+                <span className="text-[9px] text-muted-foreground font-medium whitespace-nowrap shrink-0">
+                  {item.suffix}
+                </span>
+              )}
+            </p>
+
+            {/* Label — full width, truncate if needed */}
+            <p className="text-[9px] text-muted-foreground leading-none uppercase tracking-wide font-semibold truncate w-full">
+              {item.label}
+            </p>
           </div>
         );
       })}
