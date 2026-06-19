@@ -1,8 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
-  ArrowUp,
   Hand,
   Sparkles,
   Check,
@@ -48,7 +47,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
 
   const [activePresetId, setActivePresetId] = useState<string>(TASBIH_PRESETS[0].id);
   const [confirmResetAllOpen, setConfirmResetAllOpen] = useState(false);
-  const [showJumpToTop, setShowJumpToTop] = useState(false);
 
   const activePreset = useMemo(
     () => TASBIH_PRESETS.find((p) => p.id === activePresetId) ?? TASBIH_PRESETS[0],
@@ -66,48 +64,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
       return s.current >= s.target;
     }).length;
   }, [getState, totalCyclesToday]);
-
-  /*
-   * Jump-to-top visibility — pakai WINDOW scroll, bukan <main>.
-   *
-   * Bug fix: Sebelumnya pakai `mainEl.addEventListener("scroll", ...)` di
-   * element <main>, tapi scroll sebenarnya terjadi di WINDOW karena
-   * ancestor tidak ada `overflow-y: auto` (default visible). Scroll
-   * listener di element yang tidak scrolling → tidak pernah fire.
-   *
-   * Solusi: pakai `window.addEventListener("scroll", ...)` + baca
-   * `window.scrollY` (atau `document.documentElement.scrollTop`) untuk
-   * detect scroll position. `passive: true` untuk better scroll perf.
-   *
-   * Pakai requestAnimationFrame untuk throttle update supaya tidak
-   * trigger re-render tiap scroll event (~60 events/detik).
-   */
-  useEffect(() => {
-    let rafId: number | null = null;
-
-    const updateVisibility = () => {
-      setShowJumpToTop(window.scrollY > 300);
-      rafId = null;
-    };
-
-    const handleScroll = () => {
-      if (rafId === null) {
-        rafId = requestAnimationFrame(updateVisibility);
-      }
-    };
-
-    updateVisibility(); // Initial check (untuk handle reload di posisi scroll)
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  const handleJumpToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const handleResetAllConfirm = () => {
     resetAll();
@@ -297,18 +253,6 @@ export default function Tasbih({ onMenuClick }: TasbihProps) {
           </CardContent>
         </Card>
       </main>
-
-      {/* Jump-to-top button — muncul saat window.scrollY > 300px */}
-      {showJumpToTop && (
-        <button
-          type="button"
-          onClick={handleJumpToTop}
-          className="fixed bottom-24 right-4 z-30 w-11 h-11 rounded-2xl bg-card border border-border shadow-xl flex items-center justify-center hover:bg-muted active:scale-95 transition-all"
-          aria-label="Scroll ke atas"
-        >
-          <ArrowUp className="w-5 h-5 text-foreground" aria-hidden="true" />
-        </button>
-      )}
 
       <AlertDialog open={confirmResetAllOpen} onOpenChange={setConfirmResetAllOpen}>
         <AlertDialogContent className="rounded-2xl">

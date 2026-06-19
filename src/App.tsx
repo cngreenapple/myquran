@@ -16,6 +16,7 @@ import { NotesProvider } from "@/hooks/use-notes";
 import { AppDrawer } from "@/components/AppDrawer";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { PWAStatusBar } from "@/components/PWAStatusBar";
+import { JumpToTopButton } from "@/components/JumpToTopButton";
 import { SurahListSkeleton } from "@/components/LoadingSkeleton";
 import { useServiceWorker } from "@/hooks/use-service-worker";
 
@@ -126,6 +127,7 @@ function AppShell() {
 
       {/* Global persistent UI */}
       <AudioPlayer />
+      <JumpToTopButton />
       <PWAStatusBar />
     </>
   );
