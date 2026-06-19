@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   ListMusic,
   Play,
@@ -13,6 +14,10 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  List,
+  Search,
+  Volume2,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +30,28 @@ interface FullQuranPlayerProps {
   className?: string;
 }
 
+interface QueueDropdownItem {
+  nomor: number;
+  namaLatin: string;
+  nama: string;
+  tempatTurun: string;
+  jumlahAyat: number;
+  queueIndex: number;
+  isCurrent: boolean;
+}
+
+/**
+ * Panel kontrol "Baca Al-Qur'an Full"
+ *
+ * Fitur:
+ * - Play seluruh 114 surah (1 → 114) otomatis berurutan
+ * - Play range custom (mis. QS. Al-Mulk 67 → QS. An-Nas 114)
+ * - Shuffle (acak urutan)
+ * - Repeat mode: off / repeat queue / repeat single
+ * - Dropdown list antrian: searchable, jump-to surah tertentu
+ * - Indicator progress: "Surah 5 dari 114" + progress bar
+ * - Prev/Next manual
+ */
 export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
   const audio = useAudio();
   const { data: surahList } = useSurahList();
@@ -41,23 +68,163 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
    */
   useEffect(() => {
     const unsubscribe = audio.onSurahEnded((surahNumber) => {
-      // Delegate ke queue.onSurahEnded (sudah return boolean).
-      // `false` → caller (audio context) pakai default auto-next.
-      // `true` → caller suppress default (queue sudah handle).
       return queue.onSurahEnded(surahNumber);
     });
     return unsubscribe;
   }, [audio, queue]);
 
+  // UI state
   const [expanded, setExpanded] = useState(false);
   const [showRangePicker, setShowRangePicker] = useState(false);
   const [fromNomor, setFromNomor] = useState(1);
   const [toNomor, setToNomor] = useState(30);
 
+  // Dropdown state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 288 });
+  const [queueSearch, setQueueSearch] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Map queue numbers ke full surah info untuk rendering dropdown.
+   * Memoized supaya tidak re-compute setiap render.
+   */
+  const queueItems: QueueDropdownItem[] = useMemo(() => {
+    if (!surahList) return [];
+    return queue.queue.map((nomor, idx) => {
+      const surah = surahList.find((s) => s.nomor === nomor);
+      return {
+        nomor,
+        namaLatin: surah?.namaLatin || `Surah ${nomor}`,
+        nama: surah?.nama || "",
+        tempatTurun: surah?.tempatTurun || "",
+        jumlahAyat: surah?.jumlahAyat || 0,
+        queueIndex: idx,
+        isCurrent: idx === queue.currentIndex,
+      };
+    });
+  }, [queue.queue, queue.currentIndex, surahList]);
+
+  /**
+   * Filter queue items by search query.
+   * Search by: nama latin, nomor, tempat turun, atau nama arab.
+   */
+  const filteredQueueItems = useMemo(() => {
+    if (!queueSearch.trim()) return queueItems;
+    const q = queueSearch.toLowerCase();
+    return queueItems.filter(
+      (item) =>
+        item.namaLatin.toLowerCase().includes(q) ||
+        item.nomor.toString().includes(q) ||
+        item.tempatTurun.toLowerCase().includes(q) ||
+        item.nama.includes(q),
+    );
+  }, [queueItems, queueSearch]);
+
   const currentSurahInfo = useMemo(() => {
     if (queue.currentSurah === null || !surahList) return null;
     return surahList.find((s) => s.nomor === queue.currentSurah) ?? null;
   }, [queue.currentSurah, surahList]);
+
+  // Close dropdown on outside click & Escape
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        triggerRef.current?.contains(target) ||
+        target.closest("[data-queue-dropdown]")
+      ) {
+        return;
+      }
+      setDropdownOpen(false);
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [dropdownOpen]);
+
+  /**
+   * Auto-scroll ke surah yang sedang diputar saat dropdown dibuka.
+   * Pakai manual scrollTop calculation (bukan scrollIntoView) supaya
+   * tidak ikut scroll page — hanya scroll dalam list container.
+   */
+  useEffect(() => {
+    if (dropdownOpen) {
+      setQueueSearch(""); // reset search on open
+      requestAnimationFrame(() => {
+        if (!listRef.current) return;
+        const currentEl = listRef.current.querySelector(
+          '[data-current="true"]',
+        ) as HTMLElement | null;
+        if (!currentEl) return;
+        const listRect = listRef.current.getBoundingClientRect();
+        const itemRect = currentEl.getBoundingClientRect();
+        const offset = itemRect.top - listRect.top;
+        const targetScroll =
+          listRef.current.scrollTop +
+          offset -
+          listRect.height / 2 +
+          itemRect.height / 2;
+        listRef.current.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: "smooth",
+        });
+      });
+    }
+  }, [dropdownOpen]);
+
+  // Reposition dropdown saat window resize / scroll
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleReposition = () => {
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        const dropdownWidth = Math.min(288, window.innerWidth - 16);
+        let left = rect.right - dropdownWidth;
+        if (left < 8) left = 8;
+        if (left + dropdownWidth > window.innerWidth - 8) {
+          left = window.innerWidth - dropdownWidth - 8;
+        }
+        setDropdownPos({ top: rect.bottom + 8, left, width: dropdownWidth });
+      }
+    };
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [dropdownOpen]);
+
+  const handleToggleDropdown = useCallback(() => {
+    if (!dropdownOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const dropdownWidth = Math.min(288, window.innerWidth - 16);
+      let left = rect.right - dropdownWidth;
+      if (left < 8) left = 8;
+      if (left + dropdownWidth > window.innerWidth - 8) {
+        left = window.innerWidth - dropdownWidth - 8;
+      }
+      setDropdownPos({ top: rect.bottom + 8, left, width: dropdownWidth });
+    }
+    setDropdownOpen((v) => !v);
+  }, [dropdownOpen]);
+
+  const handleJumpTo = useCallback(
+    (queueIndex: number) => {
+      queue.jumpTo(queueIndex);
+      setDropdownOpen(false);
+    },
+    [queue],
+  );
 
   const handlePlayFull = useCallback(() => {
     queue.playAll();
@@ -75,6 +242,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
 
   const RepeatIcon = queue.repeatMode === "single" ? Repeat1 : Repeat;
 
+  // Collapsed view saat queue tidak aktif
   if (!queue.isActive && !expanded) {
     return (
       <Button
@@ -102,6 +270,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
       )}
     >
       <CardContent className="p-3 space-y-2.5">
+        {/* Header — sekarang ada nomor + nama + subtitle */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/30">
@@ -111,14 +280,38 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
               <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider leading-none">
                 Mode Baca Full
               </p>
-              <p className="text-[11px] text-foreground/80 font-medium truncate leading-tight mt-0.5">
+              <p className="text-[11px] text-foreground font-semibold truncate leading-tight mt-0.5">
                 {queue.isActive && currentSurahInfo
-                  ? `${currentSurahInfo.namaLatin} (${queue.currentIndex + 1}/${queue.totalInQueue})`
+                  ? `${currentSurahInfo.nomor}. ${currentSurahInfo.namaLatin} (${queue.currentIndex + 1}/${queue.totalInQueue})`
                   : "Pilih surah untuk mulai"}
               </p>
+              {queue.isActive && currentSurahInfo && (
+                <p className="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">
+                  {currentSurahInfo.arti} • {currentSurahInfo.tempatTurun} • {currentSurahInfo.jumlahAyat} ayat
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-0.5 shrink-0">
+            {/* Dropdown toggle — distinct icon dari expand chevron */}
+            {queue.isActive && (
+              <Button
+                ref={triggerRef}
+                variant="ghost"
+                size="icon"
+                onClick={handleToggleDropdown}
+                className={cn(
+                  "rounded-full h-7 w-7",
+                  dropdownOpen &&
+                    "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+                )}
+                aria-label="Lihat daftar antrian surah"
+                aria-expanded={dropdownOpen}
+                aria-haspopup="listbox"
+              >
+                <List className="w-3.5 h-3.5" aria-hidden="true" />
+              </Button>
+            )}
             {queue.isActive && (
               <Button
                 variant="ghost"
@@ -135,7 +328,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
               size="icon"
               onClick={() => setExpanded((v) => !v)}
               className="rounded-full h-7 w-7"
-              aria-label={expanded ? "Ciutkan panel" : "Buka panel"}
+              aria-label={expanded ? "Ciutkan panel" : "Buka panel play"}
               aria-expanded={expanded}
             >
               {expanded ? (
@@ -147,6 +340,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
           </div>
         </div>
 
+        {/* Progress bar */}
         {queue.isActive && (
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2 text-[10px]">
@@ -173,6 +367,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
           </div>
         )}
 
+        {/* Controls */}
         {queue.isActive && (
           <div className="flex items-center justify-center gap-1">
             <Button
@@ -249,6 +444,7 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
           </div>
         )}
 
+        {/* Expanded: range picker */}
         {expanded && (
           <div className="pt-2 border-t border-emerald-500/20 space-y-2 animate-fade-in">
             {!showRangePicker ? (
@@ -292,9 +488,142 @@ export function FullQuranPlayer({ className }: FullQuranPlayerProps) {
           </div>
         )}
       </CardContent>
+
+      {/* Dropdown list antrian — pakai portal supaya tidak ter-clip Card overflow-hidden */}
+      {dropdownOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            data-queue-dropdown
+            className="fixed z-[60] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-fade-in"
+            style={{
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              width: dropdownPos.width,
+            }}
+            role="listbox"
+            aria-label="Antrian surah"
+          >
+            {/* Header dengan search */}
+            <div className="px-3 py-2.5 border-b border-border/60 bg-gradient-to-br from-emerald-500/8 to-transparent">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                  Antrian Baca
+                </p>
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {queue.totalInQueue} surah
+                </span>
+              </div>
+              <div className="relative">
+                <Search
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  value={queueSearch}
+                  onChange={(e) => setQueueSearch(e.target.value)}
+                  placeholder="Cari surah..."
+                  className="w-full pl-8 pr-2 py-1.5 text-xs rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  aria-label="Cari surah dalam antrian"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* List dengan scroll */}
+            <div
+              ref={listRef}
+              className="overflow-y-auto p-1.5"
+              style={{ maxHeight: "min(60vh, 480px)" }}
+            >
+              {filteredQueueItems.length === 0 ? (
+                <div className="text-center py-8 px-4 text-muted-foreground">
+                  <Search
+                    className="w-5 h-5 mx-auto mb-2 opacity-50"
+                    aria-hidden="true"
+                  />
+                  <p className="text-xs font-medium">Tidak ada surah yang cocok</p>
+                  <p className="text-[10px] mt-0.5">Coba kata kunci lain</p>
+                </div>
+              ) : (
+                filteredQueueItems.map((item) => {
+                  const isPlayingThis =
+                    item.isCurrent &&
+                    audio.isPlaying &&
+                    audio.currentSurah === item.nomor;
+                  return (
+                    <button
+                      key={item.nomor}
+                      data-current={item.isCurrent}
+                      onClick={() => handleJumpTo(item.queueIndex)}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors",
+                        item.isCurrent
+                          ? "bg-emerald-500/15"
+                          : "hover:bg-muted active:scale-[0.99]",
+                      )}
+                      role="option"
+                      aria-selected={item.isCurrent}
+                      aria-label={`${item.nomor}. ${item.namaLatin}${
+                        item.isCurrent ? " (sedang diputar)" : ""
+                      }`}
+                    >
+                      <span
+                        className={cn(
+                          "shrink-0 w-7 h-7 rounded-md text-[10px] font-bold tabular-nums flex items-center justify-center",
+                          item.isCurrent
+                            ? "bg-emerald-500 text-white shadow-sm"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {item.nomor}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={cn(
+                            "text-xs font-medium truncate",
+                            item.isCurrent
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-foreground",
+                          )}
+                        >
+                          {item.namaLatin}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {item.tempatTurun} • {item.jumlahAyat} ayat
+                        </p>
+                      </div>
+                      {item.isCurrent && (
+                        <div className="shrink-0">
+                          {isPlayingThis ? (
+                            <Volume2
+                              className="w-3.5 h-3.5 text-emerald-600 animate-pulse"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Check
+                              className="w-3.5 h-3.5 text-emerald-600"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </Card>
   );
 }
+
+// ============================================================================
+// Sub-komponen: RangePicker & RangeStepper (tetap sama)
+// ============================================================================
 
 interface RangePickerProps {
   fromNomor: number;
