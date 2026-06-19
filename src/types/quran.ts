@@ -9,10 +9,20 @@ export interface Surah {
   audioFull?: Record<string, string>;
 }
 
+/**
+ * Tafsir Kemenag dari API equran.id.
+ *
+ * Format API kadang berubah-ubah antar versi:
+ * - { kemenag: { teks: "..." } }  // nested object
+ * - { kemenag: "..." }            // string langsung
+ *
+ * Union type ini handle kedua kasus — runtime check di VerseCard.tsx
+ * (function getTafsirText) yang ekstrak string-nya.
+ */
+export type TafsirKemenagValue = string | { teks: string };
+
 export interface AyatTafsir {
-  kemenag?: {
-    teks: string;
-  };
+  kemenag?: TafsirKemenagValue;
 }
 
 export interface Ayat {

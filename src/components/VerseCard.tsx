@@ -12,6 +12,25 @@ import { AyatAudioButton } from "@/components/AyatAudioButton";
 import { useAudio } from "@/contexts/audio-context";
 import { cn } from "@/lib/utils";
 
+/**
+ * Extract tafsir Kemenag text dari ayat.
+ *
+ * API equran.id v2 kadang return:
+ *   - { tafsir: { kemenag: { teks: "..." } } }    // object nested
+ *   - { tafsir: { kemenag: "..." } }              // string langsung
+ *
+ * Handle kedua kasus biar robust kalau API format berubah.
+ */
+function getTafsirText(ayat: Ayat): string | null {
+  const raw = ayat.tafsir?.kemenag;
+  if (!raw) return null;
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "object" && "teks" in raw && typeof raw.teks === "string") {
+    return raw.teks;
+  }
+  return null;
+}
+
 interface VerseCardProps {
   surahNumber: number;
   surahName: string;
@@ -34,7 +53,7 @@ export const VerseCard = memo(
     },
     ref,
   ) {
-    const tafsirText = ayat.tafsir?.kemenag?.teks;
+    const tafsirText = getTafsirText(ayat);
     const hasTafsir = !!tafsirText;
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const { getNotesForAyat } = useNotes();
@@ -145,7 +164,7 @@ export const VerseCard = memo(
                       Tafsir Kemenag
                     </p>
                     {hasTafsir ? (
-                      <p className="text-xs text-foreground/85 leading-relaxed">
+                      <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-line">
                         {tafsirText}
                       </p>
                     ) : (
