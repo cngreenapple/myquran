@@ -12,16 +12,25 @@ import { AyatAudioButton } from "@/components/AyatAudioButton";
 import { useAudio } from "@/contexts/audio-context";
 import { cn } from "@/lib/utils";
 
+interface VerseCardProps {
+  surahNumber: number;
+  surahName: string;
+  ayat: Ayat;
+  highlighted?: boolean;
+  showTransliteration?: boolean;
+  /** Tafsir Kemenag untuk ayat ini (di-fetch terpisah oleh parent). */
+  tafsirText?: string | null;
+  /** Default state untuk tafsir (true = expanded, false = collapsed). */
+  defaultShowTafsir?: boolean;
+}
+
 /**
- * Extract tafsir Kemenag text dari ayat.
- *
- * API equran.id v2 kadang return:
- *   - { tafsir: { kemenag: { teks: "..." } } }    // object nested
- *   - { tafsir: { kemenag: "..." } }              // string langsung
- *
- * Handle kedua kasus biar robust kalau API format berubah.
+ * Extract tafsir text dari ayat sebagai fallback.
+ * Biasanya parent sudah pass `tafsirText` prop dari endpoint
+ * /api/v2/tafsir/{nomor}, tapi kalau belum (loading state),
+ * cek juga field ayat.tafsir untuk handle beberapa format.
  */
-function getTafsirText(ayat: Ayat): string | null {
+function getTafsirFromAyat(ayat: Ayat): string | null {
   const raw = ayat.tafsir?.kemenag;
   if (!raw) return null;
   if (typeof raw === "string") return raw;
@@ -29,16 +38,6 @@ function getTafsirText(ayat: Ayat): string | null {
     return raw.teks;
   }
   return null;
-}
-
-interface VerseCardProps {
-  surahNumber: number;
-  surahName: string;
-  ayat: Ayat;
-  highlighted?: boolean;
-  showTransliteration?: boolean;
-  /** Default state untuk tafsir (true = expanded, false = collapsed). */
-  defaultShowTafsir?: boolean;
 }
 
 export const VerseCard = memo(
@@ -49,11 +48,13 @@ export const VerseCard = memo(
       ayat,
       highlighted,
       showTransliteration = true,
+      tafsirText: tafsirProp = null,
       defaultShowTafsir = false,
     },
     ref,
   ) {
-    const tafsirText = getTafsirText(ayat);
+    // Prioritas: prop dari parent > fallback dari ayat.tafsir
+    const tafsirText = tafsirProp ?? getTafsirFromAyat(ayat);
     const hasTafsir = !!tafsirText;
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const { getNotesForAyat } = useNotes();

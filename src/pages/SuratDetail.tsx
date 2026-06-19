@@ -8,6 +8,7 @@ import { SurahDetailSkeleton } from "@/components/LoadingSkeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useSurahDetail } from "@/hooks/use-surah-detail";
+import { useTafsirSurah } from "@/hooks/use-tafsir";
 import { useLastRead } from "@/hooks/use-last-read";
 import { useReadingStats } from "@/hooks/use-reading-stats";
 import { useAudio } from "@/contexts/audio-context";
@@ -25,6 +26,7 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
   const isValidNomor = !isNaN(nomor) && nomor >= 1 && nomor <= 114;
 
   const { data, isLoading, isError, refetch } = useSurahDetail(isValidNomor ? nomor : 0);
+  const { getTafsir } = useTafsirSurah(isValidNomor ? nomor : 0);
   const { updateLastRead } = useLastRead();
   const { trackSurahOpen, trackAyatRead } = useReadingStats();
   const { play, currentSurah, togglePlay } = useAudio();
@@ -203,6 +205,7 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
               surahName={data.namaLatin}
               ayat={ayat}
               showTransliteration={settings.showTransliteration}
+              tafsirText={getTafsir(ayat.nomorAyat)}
             />
           ))}
         </div>
