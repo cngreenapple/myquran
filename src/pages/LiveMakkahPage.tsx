@@ -7,12 +7,16 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { LiveStreamEmbed } from "@/components/MakkahLiveStream";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
-export default function LiveMakkahPage() {
+interface LiveMakkahPageProps {
+  onMenuClick: () => void;
+}
+
+export default function LiveMakkahPage({ onMenuClick }: LiveMakkahPageProps) {
   useDocumentTitle("Live Makkah");
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-4xl" aria-labelledby="live-title">
         <Button variant="ghost" asChild className="mb-3 -ml-2 rounded-full h-8" size="sm">
           <Link to="/"><ArrowLeft className="w-3.5 h-3.5 mr-1" aria-hidden="true" /><span className="text-xs">Kembali</span></Link>

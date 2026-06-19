@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy, useEffect, useRef } from "react";
+import { useState, Suspense, lazy, useEffect, useRef, useCallback } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -57,6 +57,22 @@ function RouteAudioStopper() {
 
 function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  /**
+   * Handler untuk buka drawer.
+   *
+   * `setDrawerOpen` dari useState sudah stabil reference-nya, jadi useCallback
+   * dengan deps [] sebenarnya redundant. Tapi explicit lebih jelas intent-nya.
+   *
+   * Handler ini di-pass ke semua page yang punya Header supaya tombol menu
+   * (hamburger) bisa buka drawer. Page yang tidak terima `onMenuClick` prop
+   * akan punya tombol menu yang tidak bisa di-klik (silent noop via Header's
+   * default).
+   */
+  const openDrawer = useCallback(() => {
+    setDrawerOpen(true);
+  }, []);
+
   return (
     <>
       <AppDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
@@ -71,22 +87,22 @@ function AppShell() {
         }
       >
         <Routes>
-          <Route path="/" element={<Index onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/surat/:id" element={<SuratDetail onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/" element={<Index onMenuClick={openDrawer} />} />
+          <Route path="/surat/:id" element={<SuratDetail onMenuClick={openDrawer} />} />
           <Route path="/baca/:id" element={<QuranReader />} />
-          <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/dzikir" element={<Dzikir onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/doa" element={<Doa onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/asmaul-husna" element={<AsmaulHusna onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/bookmark" element={<BookmarkPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/catatan" element={<NotesPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/kalender" element={<KalenderPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/tentang" element={<AboutPage onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="/settings" element={<Settings onMenuClick={() => setDrawerOpen(true)} />} />
-          <Route path="*" element={<NotFound onMenuClick={() => setDrawerOpen(true)} />} />
+          <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={openDrawer} />} />
+          <Route path="/dzikir" element={<Dzikir onMenuClick={openDrawer} />} />
+          <Route path="/doa" element={<Doa onMenuClick={openDrawer} />} />
+          <Route path="/asmaul-husna" element={<AsmaulHusna onMenuClick={openDrawer} />} />
+          <Route path="/bookmark" element={<BookmarkPage onMenuClick={openDrawer} />} />
+          <Route path="/catatan" element={<NotesPage onMenuClick={openDrawer} />} />
+          <Route path="/arah-kiblat" element={<QiblaPage onMenuClick={openDrawer} />} />
+          <Route path="/puasa-sunnah" element={<PuasaSunnahPage onMenuClick={openDrawer} />} />
+          <Route path="/kalender" element={<KalenderPage onMenuClick={openDrawer} />} />
+          <Route path="/live-makkah" element={<LiveMakkahPage onMenuClick={openDrawer} />} />
+          <Route path="/tentang" element={<AboutPage onMenuClick={openDrawer} />} />
+          <Route path="/settings" element={<Settings onMenuClick={openDrawer} />} />
+          <Route path="*" element={<NotFound onMenuClick={openDrawer} />} />
         </Routes>
       </Suspense>
 
@@ -119,8 +135,8 @@ const App = () => (
               </DzikirProvider>
             </NotesProvider>
           </BookmarkProvider>
-        </LastReadProvider>
-      </ReadingStatsProvider>
+        </ReadingStatsProvider>
+      </AppSettingsProvider>
     </AppSettingsProvider>
   </QueryClientProvider>
 );

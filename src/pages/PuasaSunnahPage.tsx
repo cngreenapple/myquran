@@ -17,14 +17,18 @@ const colorClasses: Record<FastingItem["color"], { bg: string; border: string; t
   violet: { bg: "bg-violet-500/5", border: "border-violet-500/30", text: "text-violet-700 dark:text-violet-400", emojiBg: "bg-violet-500/15" },
 };
 
-export default function PuasaSunnahPage() {
+interface PuasaSunnahPageProps {
+  onMenuClick: () => void;
+}
+
+export default function PuasaSunnahPage({ onMenuClick }: PuasaSunnahPageProps) {
   useDocumentTitle("Puasa Sunnah");
   const [filter, setFilter] = useState<FastingCategory | "all">("all");
   const filtered = filter === "all" ? PUASA_SUNNAH : PUASA_SUNNAH.filter((p) => p.category === filter);
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="puasa-title">
         <Button variant="ghost" asChild className="mb-3 -ml-2 rounded-full h-8" size="sm">
           <Link to="/"><ArrowLeft className="w-3.5 h-3.5 mr-1" aria-hidden="true" /><span className="text-xs">Kembali</span></Link>

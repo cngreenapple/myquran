@@ -6,12 +6,16 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Button } from "@/components/ui/button";
 
-export default function AboutPage() {
+interface AboutPageProps {
+  onMenuClick: () => void;
+}
+
+export default function AboutPage({ onMenuClick }: AboutPageProps) {
   useDocumentTitle("Tentang Aplikasi");
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="about-title">
         <Button variant="ghost" asChild className="mb-3 -ml-2 rounded-full h-8" size="sm">
           <Link to="/"><ArrowLeft className="w-3.5 h-3.5 mr-1" aria-hidden="true" /><span className="text-xs">Kembali</span></Link>

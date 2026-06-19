@@ -8,13 +8,17 @@ import { QiblaCompass } from "@/components/QiblaCompass";
 import { usePrayerTimes } from "@/hooks/use-prayer-times";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 
-export default function QiblaPage() {
+interface QiblaPageProps {
+  onMenuClick: () => void;
+}
+
+export default function QiblaPage({ onMenuClick }: QiblaPageProps) {
   useDocumentTitle("Arah Kiblat");
   const { location, locationError, isFetchingLocation, requestLocation } = usePrayerTimes();
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header />
+      <Header onMenuClick={onMenuClick} />
       <main className="container mx-auto px-3 py-3 pb-32 md:pb-12 max-w-3xl" aria-labelledby="qibla-title">
         <Button variant="ghost" asChild className="mb-3 -ml-2 rounded-full h-8" size="sm">
           <Link to="/"><ArrowLeft className="w-3.5 h-3.5 mr-1" aria-hidden="true" /><span className="text-xs">Kembali</span></Link>

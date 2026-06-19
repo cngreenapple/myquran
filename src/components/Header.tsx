@@ -4,7 +4,18 @@ import { BookOpen, Menu } from "lucide-react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 interface HeaderProps {
-  onMenuClick: () => void;
+  /**
+   * Handler untuk tombol menu (hamburger).
+   *
+   * Optional dengan default no-op supaya:
+   * 1. Page yang lupa pass prop tidak crash (TypeScript tidak complain,
+   *    runtime tidak error)
+   * 2. Konsistensi UX — tombol tetap visible di semua halaman
+   *
+   * Best practice: selalu pass handler dari parent (AppShell) yang
+   * control `drawerOpen` state.
+   */
+  onMenuClick?: () => void;
 }
 
 /**
@@ -27,6 +38,9 @@ interface HeaderProps {
  */
 export function Header({ onMenuClick }: HeaderProps) {
   const navigate = useNavigate();
+  // Defensive: kalau tidak ada handler, pakai noop supaya click aman
+  // (tidak throw, tidak "tidak bisa di klik" tanpa visual feedback).
+  const handleMenuClick = onMenuClick ?? (() => {});
 
   const content = (
     <header
@@ -35,7 +49,7 @@ export function Header({ onMenuClick }: HeaderProps) {
     >
       <div className="container mx-auto flex h-13 items-center justify-between gap-2 px-3 max-w-5xl">
         <button
-          onClick={onMenuClick}
+          onClick={handleMenuClick}
           className="relative z-[1010] icon-btn h-10 w-10"
           aria-label="Buka menu navigasi"
           type="button"
