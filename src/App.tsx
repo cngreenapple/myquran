@@ -8,6 +8,7 @@ import { AudioProvider, useAudio } from "@/contexts/audio-context";
 import { AyatAudioProvider, useAyatAudio } from "@/contexts/ayat-audio-context";
 import { LastReadProvider } from "@/hooks/use-last-read";
 import { DzikirProvider } from "@/hooks/use-dzikir-counter";
+import { TasbihProvider } from "@/hooks/use-tasbih-counter";
 import { ReadingStatsProvider } from "@/hooks/use-reading-stats";
 import { AppSettingsProvider } from "@/hooks/use-app-settings";
 import { BookmarkProvider } from "@/hooks/use-bookmarks";
@@ -38,18 +39,11 @@ const PuasaSunnahPage = lazy(() => import("./pages/PuasaSunnahPage"));
 const LiveMakkahPage = lazy(() => import("./pages/LiveMakkahPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const KalenderPage = lazy(() => import("./pages/KalenderPage"));
+const Tasbih = lazy(() => import("./pages/Tasbih"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /**
  * Stop audio player saat route berubah.
- *
- * Tanpa ini, user navigate dari /surat/1 (audio playing) ke /settings
- * → audio masih jalan di background. Side effects: audio leak,
- * NavigationDrawer tidak bisa buka (audio state stuck), dst.
- *
- * Pakai ref untuk capture latest `stop` function — `stop` dari
- * useAudio stabil reference kecuali audio context berubah, dan kita
- * tidak perlu re-subscribe event handler kalau itu terjadi.
  */
 function RouteAudioStopper() {
   const location = useLocation();
@@ -76,13 +70,6 @@ function RouteAudioStopper() {
 function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  /**
-   * Handler untuk buka drawer.
-   *
-   * `setDrawerOpen` dari useState sudah stabil reference-nya, jadi useCallback
-   * dengan deps [] sebenarnya redundant. Tapi explicit lebih jelas intent-nya
-   * dan best practice untuk konsistensi dengan handler lain.
-   */
   const openDrawer = useCallback(() => {
     setDrawerOpen(true);
   }, []);
@@ -106,6 +93,7 @@ function AppShell() {
           <Route path="/baca/:id" element={<QuranReader />} />
           <Route path="/jadwal-sholat" element={<PrayerTimes onMenuClick={openDrawer} />} />
           <Route path="/dzikir" element={<Dzikir onMenuClick={openDrawer} />} />
+          <Route path="/tasbih" element={<Tasbih onMenuClick={openDrawer} />} />
           <Route path="/doa" element={<Doa onMenuClick={openDrawer} />} />
           <Route path="/asmaul-husna" element={<AsmaulHusna onMenuClick={openDrawer} />} />
           <Route path="/bookmark" element={<BookmarkPage onMenuClick={openDrawer} />} />
@@ -120,7 +108,7 @@ function AppShell() {
         </Routes>
       </Suspense>
 
-      {/* Global persistent UI — mounted sekali, tidak re-mount tiap navigasi */}
+      {/* Global persistent UI */}
       <AudioPlayer />
       <PWAStatusBar />
     </>
@@ -135,17 +123,19 @@ const App = () => (
           <BookmarkProvider>
             <NotesProvider>
               <DzikirProvider>
-                <AudioProvider>
-                  <AyatAudioProvider>
-                    <TooltipProvider>
-                      <Toaster />
-                      <Sonner />
-                      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                        <AppShell />
-                      </BrowserRouter>
-                    </TooltipProvider>
-                  </AyatAudioProvider>
-                </AudioProvider>
+                <TasbihProvider>
+                  <AudioProvider>
+                    <AyatAudioProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                          <AppShell />
+                        </BrowserRouter>
+                      </TooltipProvider>
+                    </AyatAudioProvider>
+                  </AudioProvider>
+                </TasbihProvider>
               </DzikirProvider>
             </NotesProvider>
           </BookmarkProvider>

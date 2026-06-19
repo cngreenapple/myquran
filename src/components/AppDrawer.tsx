@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Bookmark, StickyNote, Clock, Star, BookHeart, Hand,
   Compass, Moon, Calendar, Video, Info, X, ArrowUp, Settings,
+  CircleDot,
 } from "lucide-react";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const IBADAH: NavItem[] = [
   { to: "/jadwal-sholat", label: "Jadwal Sholat", icon: Clock },
   { to: "/arah-kiblat", label: "Arah Kiblat", icon: Compass },
   { to: "/dzikir", label: "Dzikir", icon: BookHeart },
+  { to: "/tasbih", label: "Tasbih", icon: CircleDot },
   { to: "/doa", label: "Doa", icon: Hand },
 ];
 

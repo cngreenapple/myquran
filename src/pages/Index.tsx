@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, BookOpen, Clock, BookHeart, Hand, Star,
-  Compass, Moon, ArrowRight, Calendar,
+  Compass, Moon, ArrowRight, Calendar, CircleDot,
 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SearchBar } from "@/components/SearchBar";
@@ -29,6 +29,7 @@ interface IndexProps {
 const QUICK_ACTIONS = [
   { to: "/jadwal-sholat", label: "Sholat", icon: Clock, color: "emerald" },
   { to: "/dzikir", label: "Dzikir", icon: BookHeart, color: "amber", badgeKey: "dzikir" as const },
+  { to: "/tasbih", label: "Tasbih", icon: CircleDot, color: "violet" },
   { to: "/doa", label: "Doa", icon: Hand, color: "violet" },
   { to: "/asmaul-husna", label: "Asmaul", icon: Star, color: "rose" },
   { to: "/arah-kiblat", label: "Kiblat", icon: Compass, color: "sky" },
