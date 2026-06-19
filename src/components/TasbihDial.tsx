@@ -28,21 +28,29 @@ const gradientMap: Record<TasbihDialProps["color"], { from: string; to: string; 
 };
 
 /**
- * Haptic patterns:
- * - TAP (subtle): 8ms pulse — quick feedback per increment, tidak ganggu
- * - COMPLETE (strong): [50, 30, 80] — double-burst dramatic pattern untuk achievement
- * - RESET (strong): [30, 50, 30] — symmetrical pulse untuk konfirmasi reset
+ * Haptic patterns (only on REACH TARGET, not on regular tap):
+ *
+ * - TAP: no vibration (regular counter increment tidak perlu haptic feedback)
+ * - COMPLETE: triple-ascending burst [100, 50, 150, 50, 200] = 550ms
+ *   Pattern ascending: starts soft → builds → climaxes dengan long 200ms pulse.
+ *   Plus secondary vibration call 100ms kemudian untuk extra "echo" feel.
+ *   Total perceived vibration: ~650ms — dramatic, jelas terasa.
+ * - RESET: long single pulse [200] = 200ms — clear "reset" signal
  */
-function hapticTap() {
-  if ("vibrate" in navigator) navigator.vibrate(8);
-}
-
 function hapticComplete() {
-  if ("vibrate" in navigator) navigator.vibrate([50, 30, 80]);
+  if (!("vibrate" in navigator)) return;
+  // Triple-ascending burst — escalate intensity
+  navigator.vibrate([100, 50, 150, 50, 200]);
+  // Secondary "echo" vibration 100ms later untuk extra emphasis
+  setTimeout(() => {
+    if ("vibrate" in navigator) {
+      navigator.vibrate([80, 40, 80]);
+    }
+  }, 650);
 }
 
 function hapticReset() {
-  if ("vibrate" in navigator) navigator.vibrate([30, 50, 30]);
+  if ("vibrate" in navigator) navigator.vibrate([200]);
 }
 
 function TasbihDialComponent({
@@ -69,20 +77,25 @@ function TasbihDialComponent({
 
   /**
    * Track transition `isComplete: false → true` untuk trigger celebration haptic.
-   * Pakai ref (bukan useEffect langsung) supaya:
-   * 1. Tidak trigger saat initial render
-   * 2. Tidak trigger kalau user navigate away & back
-   * 3. Detect edge dengan presisi (transition only, bukan current state)
+   *
+   * Behavior: setiap kali user reach target (cycle 1, 2, 3, dst), fire haptic.
+   * - wasCompleteRef tracks previous state supaya tidak double-trigger.
+   * - Kalau user mulai cycle baru (reset, current turun ke 0), wasCompleteRef
+   *   jadi false, dan reach target lagi → haptic fires.
+   * - Pakai ref (bukan useEffect langsung) supaya:
+   *   1. Tidak trigger saat initial render
+   *   2. Tidak trigger kalau user navigate away & back
+   *   3. Detect edge dengan presisi (transition only)
    */
   useEffect(() => {
     if (isComplete && !wasCompleteRef.current) {
-      // Just reached target!
+      // Just reached target — fire STRONG celebration haptic!
       setCelebrating(true);
       hapticComplete();
       if (celebrateTimeoutRef.current) clearTimeout(celebrateTimeoutRef.current);
       celebrateTimeoutRef.current = window.setTimeout(() => {
         setCelebrating(false);
-      }, 600);
+      }, 800);
     }
     wasCompleteRef.current = isComplete;
   }, [isComplete]);
@@ -115,8 +128,8 @@ function TasbihDialComponent({
       if (pt === "touch") return;
     }
 
+    // Tap biasa: NO haptic (per request). Visual animation only.
     onTap();
-    hapticTap();
     setAnimating(true);
     if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
     tapTimeoutRef.current = window.setTimeout(() => setAnimating(false), 180);
@@ -128,8 +141,9 @@ function TasbihDialComponent({
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
+    // Tap biasa: NO haptic. onTap() return boolean — kalau true (reach target),
+    // useEffect [isComplete] akan trigger hapticComplete() + visual celebration.
     onTap();
-    hapticTap();
     setAnimating(true);
     if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
     tapTimeoutRef.current = window.setTimeout(() => setAnimating(false), 180);
@@ -138,12 +152,12 @@ function TasbihDialComponent({
   return (
     <div className="flex flex-col items-center">
       <div className="relative w-64 h-64 sm:w-72 sm:h-72 select-none">
-        {/* Outer pulse ring saat complete */}
+        {/* Outer pulse ring saat complete (subtle, ongoing) */}
         {isComplete && !celebrating && (
           <div className="absolute inset-0 rounded-full bg-emerald-500/15 animate-ping" aria-hidden="true" />
         )}
 
-        {/* Celebration burst: extra ring + scale saat reach target */}
+        {/* Celebration burst: extra rings + scale saat reach target */}
         {celebrating && (
           <>
             <div
@@ -152,6 +166,11 @@ function TasbihDialComponent({
             />
             <div
               className="absolute -inset-2 rounded-full ring-4 ring-emerald-500/40 animate-pulse"
+              aria-hidden="true"
+            />
+            <div
+              className="absolute -inset-4 rounded-full ring-2 ring-emerald-500/20 animate-pulse"
+              style={{ animationDelay: "0.2s" }}
               aria-hidden="true"
             />
           </>
