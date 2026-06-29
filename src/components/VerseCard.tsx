@@ -24,22 +24,6 @@ interface VerseCardProps {
   defaultShowTafsir?: boolean;
 }
 
-/**
- * Extract tafsir text dari ayat sebagai fallback.
- * Biasanya parent sudah pass `tafsirText` prop dari endpoint
- * /api/v2/tafsir/{nomor}, tapi kalau belum (loading state),
- * cek juga field ayat.tafsir untuk handle beberapa format.
- */
-function getTafsirFromAyat(ayat: Ayat): string | null {
-  const raw = ayat.tafsir?.kemenag;
-  if (!raw) return null;
-  if (typeof raw === "string") return raw;
-  if (typeof raw === "object" && "teks" in raw && typeof raw.teks === "string") {
-    return raw.teks;
-  }
-  return null;
-}
-
 export const VerseCard = memo(
   forwardRef<HTMLDivElement, VerseCardProps>(function VerseCard(
     {
@@ -48,13 +32,11 @@ export const VerseCard = memo(
       ayat,
       highlighted,
       showTransliteration = true,
-      tafsirText: tafsirProp = null,
+      tafsirText = null,
       defaultShowTafsir = false,
     },
     ref,
   ) {
-    // Prioritas: prop dari parent > fallback dari ayat.tafsir
-    const tafsirText = tafsirProp ?? getTafsirFromAyat(ayat);
     const hasTafsir = !!tafsirText;
     const { isBookmarked, toggleBookmark } = useBookmarks();
     const { getNotesForAyat } = useNotes();
@@ -94,11 +76,6 @@ export const VerseCard = memo(
     const handleOpenNotes = () => {
       if ("vibrate" in navigator) navigator.vibrate(10);
       setNotesDialogOpen(true);
-    };
-
-    const handleToggleTafsir = () => {
-      if ("vibrate" in navigator) navigator.vibrate(10);
-      setTafsirOpen((v) => !v);
     };
 
     return (
@@ -234,7 +211,10 @@ export const VerseCard = memo(
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleToggleTafsir}
+                    onClick={() => {
+                      if ("vibrate" in navigator) navigator.vibrate(10);
+                      setTafsirOpen((v) => !v);
+                    }}
                     type="button"
                     className={cn(
                       "h-7 px-2.5 gap-1 rounded-full text-[11px] font-medium",

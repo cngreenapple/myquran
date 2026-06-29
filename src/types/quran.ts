@@ -10,19 +10,14 @@ export interface Surah {
 }
 
 /**
- * Tafsir Kemenag dari API equran.id.
- *
- * Format API kadang berubah-ubah antar versi:
- * - { kemenag: { teks: "..." } }  // nested object
- * - { kemenag: "..." }            // string langsung
- *
- * Union type ini handle kedua kasus — runtime check di VerseCard.tsx
- * (function getTafsirText) yang ekstrak string-nya.
+ * Info surah tetangga untuk navigasi.
+ * `false` kalau tidak ada (Mis: surah 1 tidak punya suratSebelumnya).
  */
-export type TafsirKemenagValue = string | { teks: string };
-
-export interface AyatTafsir {
-  kemenag?: TafsirKemenagValue;
+export interface SurahNeighbor {
+  nomor: number;
+  nama: string;
+  namaLatin: string;
+  jumlahAyat: number;
 }
 
 export interface Ayat {
@@ -31,12 +26,14 @@ export interface Ayat {
   teksLatin: string;
   teksIndonesia: string;
   audio?: Record<string, string>;
-  tafsir?: AyatTafsir;
 }
 
 export interface SurahDetail extends Surah {
   ayat: Ayat[];
   audioFull: Record<string, string>;
+  /** Tetangga untuk navigasi prev/next. `false` jika tidak ada. */
+  suratSelanjutnya: SurahNeighbor | false;
+  suratSebelumnya: SurahNeighbor | false;
 }
 
 export interface LastRead {
@@ -59,6 +56,5 @@ export interface BookmarkItem {
 /**
  * Shared color variant type — digunakan di seluruh app untuk
  * dzikir, doa, asmaul husna, holiday, puasa sunnah, dll.
- * Extract ke satu tempat supaya konsisten dan mudah di-maintain.
  */
 export type ColorVariant = "emerald" | "amber" | "sky" | "rose" | "violet";

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Play, MapPin, BookOpen, Maximize2 } from "lucide-react";
+import { ArrowLeft, Play, MapPin, BookOpen, Maximize2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { VerseCard } from "@/components/VerseCard";
@@ -217,6 +217,44 @@ export default function SuratDetail({ onMenuClick }: SuratDetailProps) {
             />
           ))}
         </div>
+
+        {/* Navigasi prev/next surah — dari API suratSelanjutnya / suratSebelumnya */}
+        <nav
+          className="mt-6 flex items-center justify-between gap-2"
+          aria-label="Navigasi surat"
+        >
+          {data.suratSebelumnya ? (
+            <Button
+              variant="outline"
+              asChild
+              className="rounded-full gap-1 text-xs flex-1 h-9"
+              size="sm"
+            >
+              <Link to={`/surat/${data.suratSebelumnya.nomor}`}>
+                <ChevronLeft className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                <span className="truncate">{data.suratSebelumnya.namaLatin}</span>
+              </Link>
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          {data.suratSelanjutnya ? (
+            <Button
+              variant="outline"
+              asChild
+              className="rounded-full gap-1 text-xs flex-1 h-9"
+              size="sm"
+            >
+              <Link to={`/surat/${data.suratSelanjutnya.nomor}`}>
+                <span className="truncate">{data.suratSelanjutnya.namaLatin}</span>
+                <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              </Link>
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
+        </nav>
       </main>
     </div>
   );
