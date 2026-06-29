@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Moon, Sun, Heart, BookOpen, RotateCcw, Eye, Sparkles, Palette } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Heart, BookOpen, RotateCcw, Eye, Sparkles, Palette, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/Header";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { QariSelector } from "@/components/QariSelector";
 import { useTheme } from "@/hooks/use-theme";
 import { useLastRead } from "@/hooks/use-last-read";
 import { useReadingStats } from "@/hooks/use-reading-stats";
@@ -111,6 +112,21 @@ export default function Settings({ onMenuClick }: SettingsProps) {
                   checked={settings.showVerseOfTheDay}
                   onChange={() => updateSetting("showVerseOfTheDay", !settings.showVerseOfTheDay)}
                 />
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* Qari / Pembaca */}
+          <section aria-labelledby="qari-heading" className="md:col-span-2">
+            <h2 id="qari-heading" className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1 flex items-center gap-1.5">
+              <Mic className="w-3 h-3" aria-hidden="true" />Qari (Pembaca)
+            </h2>
+            <Card>
+              <CardContent className="p-3.5">
+                <p className="text-[11px] text-muted-foreground mb-2.5">
+                  Pilih qari untuk audio murottal. Berlaku untuk audio per surah dan per ayat.
+                </p>
+                <QariSelector />
               </CardContent>
             </Card>
           </section>

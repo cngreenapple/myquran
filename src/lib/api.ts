@@ -4,6 +4,60 @@ const BASE_URL = "https://equran.id/api/v2";
 const TAFSIR_URL = "https://equran.id/api/v2/tafsir";
 const TIMEOUT = 20000;
 
+// ============================================================================
+// Qari (Reciter) definitions
+// ============================================================================
+
+export interface QariInfo {
+  /** API key (e.g. "01", "05") */
+  id: string;
+  /** Full name */
+  name: string;
+  /** Short display name */
+  shortName: string;
+  /** CDN folder name for equran.id audio URLs */
+  folder: string;
+}
+
+/**
+ * 6 qari tersedia di equran.id API.
+ * Default: Al-Afasy (id: "05") — paling populer.
+ */
+export const QARI_LIST: QariInfo[] = [
+  { id: "05", name: "Misyari Rasyid Al-Afasy", shortName: "Al-Afasy", folder: "Misyari-Rasyid-Al-Afasi" },
+  { id: "01", name: "Abdullah Al-Juhany", shortName: "Al-Juhany", folder: "Abdullah-Al-Juhany" },
+  { id: "02", name: "Abdul Muhsin Al-Qasim", shortName: "Al-Qasim", folder: "Abdul-Muhsin-Al-Qasim" },
+  { id: "03", name: "Abdurrahman as-Sudais", shortName: "As-Sudais", folder: "Abdurrahman-as-Sudais" },
+  { id: "04", name: "Ibrahim Al-Dossari", shortName: "Al-Dossari", folder: "Ibrahim-Al-Dossari" },
+  { id: "06", name: "Yasser Al-Dosari", shortName: "Al-Dosari", folder: "Yasser-Al-Dosari" },
+];
+
+const QARI_STORAGE_KEY = "quran-selected-qari";
+const DEFAULT_QARI_ID = "05";
+
+/**
+ * Get qari ID dari localStorage (dipanggil saat play, bukan saat render).
+ */
+export function getSelectedQariId(): string {
+  try {
+    return localStorage.getItem(QARI_STORAGE_KEY) || DEFAULT_QARI_ID;
+  } catch {
+    return DEFAULT_QARI_ID;
+  }
+}
+
+export function getQariById(id: string): QariInfo {
+  return QARI_LIST.find((q) => q.id === id) ?? QARI_LIST[0];
+}
+
+function getSelectedQariFolder(): string {
+  return getQariById(getSelectedQariId()).folder;
+}
+
+// ============================================================================
+// Fetch helpers
+// ============================================================================
+
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
@@ -36,19 +90,6 @@ export async function fetchSurahDetail(nomor: number): Promise<SurahDetail> {
 /**
  * Tafsir Kemenag per surah.
  * Endpoint: GET https://equran.id/api/v2/tafsir/{nomor}
- *
- * Response shape:
- * {
- *   code: 200,
- *   data: {
- *     nomor: 1,
- *     nama: "Al-Fatihah",
- *     tafsir: [
- *       { ayat: 1, teks: "..." },
- *       { ayat: 2, teks: "..." }
- *     ]
- *   }
- * }
  */
 export interface TafsirItem {
   ayat: number;
@@ -68,30 +109,35 @@ export async function fetchTafsirSurah(nomor: number): Promise<TafsirItem[]> {
 }
 
 // ============================================================================
-// Audio helpers
+// Audio helpers — qari-aware
 // ============================================================================
 
-/**
- * Audio source info untuk fallback otomatis.
- * Browser akan try src pertama, kalau error try src berikutnya, dst.
- */
 export interface AudioSource {
   src: string;
   type: string;
 }
 
 /**
- * Multiple CDN fallback untuk audio murottal Al-Afasy (per surah).
- * Format: padded 3-digit number (e.g. 001, 002, ..., 114).
+ * Audio sources untuk 1 surah.
  *
- * Sumber CDN:
- * 1. QuranicAudio.com (primary — official Al-Afasy)
- * 2. Islamic.network (mirror)
- * 3. EveryAyah.com (alternative)
+ * Priority:
+ * 1. equran.id CDN (qari yang dipilih user)
+ * 2. QuranicAudio.com (Al-Afasy — fallback)
+ * 3. Islamic.network (Al-Afasy — mirror)
+ * 4. EveryAyah.com (Al-Afasy — alternative)
+ *
+ * Browser akan try source pertama, kalau error otomatis ke berikutnya.
  */
 export function getAudioSources(surahNumber: number): AudioSource[] {
   const padded = String(surahNumber).padStart(3, "0");
+  const folder = getSelectedQariFolder();
   return [
+    // Primary: equran.id CDN (qari yang dipilih)
+    {
+      src: `https://cdn.equran.id/audio-full/${folder}/${padded}.mp3`,
+      type: "audio/mpeg",
+    },
+    // Fallback: external CDNs (hanya Al-Afasy)
     {
       src: `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${padded}.mp3`,
       type: "audio/mpeg",
@@ -108,11 +154,27 @@ export function getAudioSources(surahNumber: number): AudioSource[] {
 }
 
 /**
- * Multiple CDN fallback untuk audio murottal per ayat.
- * Format: surah:ayat (e.g. 1:1, 114:6)
+ * Audio sources untuk 1 ayat.
+ *
+ * Priority:
+ * 1. equran.id CDN (qari yang dipilih user)
+ * 2. Islamic.network (Al-Afasy — fallback)
+ * 3. EveryAyah.com (Al-Afasy — alternative)
+ *
+ * Format partial: `surahPadded3 + ayatPadded3` (e.g. "001001" untuk QS.1 ayat 1)
  */
 export function getAyatAudioSources(surahNumber: number, ayatNumber: number): AudioSource[] {
+  const paddedSurah = String(surahNumber).padStart(3, "0");
+  const paddedAyat = String(ayatNumber).padStart(3, "0");
+  const combined = `${paddedSurah}${paddedAyat}`;
+  const folder = getSelectedQariFolder();
   return [
+    // Primary: equran.id CDN (qari yang dipilih)
+    {
+      src: `https://cdn.equran.id/audio-partial/${folder}/${combined}.mp3`,
+      type: "audio/mpeg",
+    },
+    // Fallback: external CDNs (hanya Al-Afasy)
     {
       src: `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surahNumber}:${ayatNumber}.mp3`,
       type: "audio/mpeg",
@@ -126,9 +188,6 @@ export function getAyatAudioSources(surahNumber: number, ayatNumber: number): Au
 
 /**
  * Append <source> children ke HTMLAudioElement untuk fallback otomatis.
- * Browser otomatis try source berikutnya kalau current source error.
- *
- * Hapus src & <source> lama sebelum append supaya tidak ada duplikat.
  */
 export function appendAudioSources(
   audio: HTMLAudioElement,
