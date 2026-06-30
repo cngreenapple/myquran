@@ -155,43 +155,33 @@ export default function Doa({ onMenuClick }: DoaProps) {
           </div>
         </div>
 
-        {/* Category filter */}
+        {/* Category filter — compact dropdown */}
         {!isLoading && categories.length > 0 && (
-          <div className="mb-4 -mx-3 px-3 overflow-x-auto no-scrollbar" role="tablist" aria-label="Filter kategori doa">
-            <div className="flex gap-2 pb-1 min-w-max">
-              <button
-                onClick={() => setActiveCategory("all")}
-                role="tab"
-                aria-selected={activeCategory === "all"}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border-2",
-                  activeCategory === "all"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border/60 bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                📚 Semua ({doaItems.length})
-              </button>
+          <div className="mb-4">
+            <label htmlFor="doa-category" className="sr-only">Filter kategori doa</label>
+            <select
+              id="doa-category"
+              value={activeCategory}
+              onChange={(e) => setActiveCategory(e.target.value)}
+              className="w-full px-3 py-2.5 text-sm rounded-xl border border-border/60 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='hsl(158 12% 40%)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.75rem center',
+                backgroundSize: '1rem',
+              }}
+              aria-label="Filter kategori doa"
+            >
+              <option value="all">📚 Semua ({doaItems.length})</option>
               {categories.map((cat) => {
                 const count = doaItems.filter((d) => d.category === cat.id).length;
                 return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    role="tab"
-                    aria-selected={activeCategory === cat.id}
-                    className={cn(
-                      "px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border-2",
-                      activeCategory === cat.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/60 bg-card text-muted-foreground hover:text-foreground",
-                    )}
-                  >
+                  <option key={cat.id} value={cat.id}>
                     {cat.icon} {cat.name} ({count})
-                  </button>
+                  </option>
                 );
               })}
-            </div>
+            </select>
           </div>
         )}
 
