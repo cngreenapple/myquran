@@ -10,7 +10,7 @@ interface QiblaCompassProps {
 }
 
 export function QiblaCompass({ location }: QiblaCompassProps) {
-  const { qibla, rotation, isAligned, permission, requestPermission, startTracking, stopTracking, isTracking, hasSignal, isWaitingForSignal } = useQibla(location);
+  const { qibla, rotation, isAligned, permission, requestPermission, startTracking, stopTracking, isTracking, hasSignal, isWaitingForSignal, needsCalibration } = useQibla(location);
   const [displayRotation, setDisplayRotation] = useState(0);
 
   useEffect(() => {
@@ -154,10 +154,19 @@ export function QiblaCompass({ location }: QiblaCompassProps) {
         </div>
       )}
 
+      {isTracking && needsCalibration && (
+        <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-600 dark:text-amber-400 text-center">
+          <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
+          Gerakkan perangkat dalam bentuk angka 8 untuk kalibrasi kompas
+        </div>
+      )}
+
       {isTracking && !hasSignal && !isWaitingForSignal && (
-        <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-600 dark:text-amber-400">
-          <AlertCircle className="w-3 h-3" aria-hidden="true" />
-          Sensor tidak merespon. Coba gunakan perangkat mobile atau pastikan sensor tersedia.
+        <div className="flex items-center gap-1.5 mb-2 text-xs text-rose-600 dark:text-rose-400 text-center">
+          <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
+          {typeof window !== "undefined" && window.location.protocol !== "https:"
+            ? "Sensor kompas tidak berfungsi di HTTP. Gunakan HTTPS (Vercel) untuk mengaktifkan sensor."
+            : "Sensor tidak merespon. Pastikan perangkat memiliki sensor kompas dan akses telah diizinkan."}
         </div>
       )}
 

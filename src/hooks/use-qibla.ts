@@ -14,10 +14,12 @@ interface UseQiblaReturn {
   startTracking: () => void;
   stopTracking: () => void;
   isTracking: boolean;
-  /** Apakah sensor orientation mengirim data (kalau false, berarti device tidak support) */
+  /** Apakah sensor orientation mengirim data */
   hasSignal: boolean;
-  /** Apakah sedang dalam periode deteksi signal (3 detik setelah start) */
+  /** Apakah sedang dalam periode deteksi signal */
   isWaitingForSignal: boolean;
+  /** Apakah heading masih null karena butuh kalibrasi */
+  needsCalibration: boolean;
 }
 
 const ALIGN_TOLERANCE = 5; // degrees
@@ -29,6 +31,7 @@ export function useQibla(location: Location | null): UseQiblaReturn {
   const [isTracking, setIsTracking] = useState(false);
   const [hasSignal, setHasSignal] = useState(false);
   const [isWaitingForSignal, setIsWaitingForSignal] = useState(false);
+  const [needsCalibration, setNeedsCalibration] = useState(false);
 
  // Counter untuk logging — berapa banyak event orientation diterima
   const eventCountRef = useRef(0);
@@ -42,15 +45,21 @@ export function useQibla(location: Location | null): UseQiblaReturn {
       webkitCompassHeading: (orient as unknown as { webkitCompassHeading?: number }).webkitCompassHeading,
       webkitCompassAccuracy: (orient as unknown as { webkitCompassAccuracy?: number }).webkitCompassAccuracy,
     });
+    // Signal diterima = sensor aktif (meski heading null karena kalibrasi)
+    setHasSignal(true);
+
     if (heading !== null) {
       setDeviceHeading(heading);
-      setHasSignal(true);
+      setNeedsCalibration(false);
     } else if (eventCountRef.current <= 5) {
-      // Log 5 event pertama yang gagal di-normalize untuk debugging
-      console.log("[Qibla] Orientation event ignored:", {
+      console.log("[Qibla] Orientation event - heading null (kalibrasi?):", {
         alpha: orient.alpha,
         webkitCompassHeading: (orient as unknown as { webkitCompassHeading?: number }).webkitCompassHeading,
       });
+      // Setelah beberapa event tanpa heading, tandai perlu kalibrasi
+      if (eventCountRef.current >= 3) {
+        setNeedsCalibration(true);
+      }
     }
   });
 
@@ -160,6 +169,7 @@ export function useQibla(location: Location | null): UseQiblaReturn {
     setIsWaitingForSignal(false);
     setDeviceHeading(null);
     setHasSignal(false);
+    setNeedsCalibration(false);
   }, [isTracking]);
 
   // Cleanup on unmount
@@ -187,5 +197,6 @@ export function useQibla(location: Location | null): UseQiblaReturn {
     isTracking,
     hasSignal,
     isWaitingForSignal,
+    needsCalibration,
   };
 }
