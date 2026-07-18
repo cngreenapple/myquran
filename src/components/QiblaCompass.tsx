@@ -33,7 +33,10 @@ export function QiblaCompass({ location }: QiblaCompassProps) {
   }, [rotation, isTracking, hasSignal]);
 
   const handleStart = async () => {
-    if (permission === "prompt" || permission === "denied") {
+    // iOS: permission awal = "unknown", perlu requestPermission dulu
+    // Android HTTPS: permission = "granted", langsung start
+    // Android HTTP: permission = "unsupported"
+    if (permission === "unknown" || permission === "prompt" || permission === "denied") {
       const result = await requestPermission();
       if (result === "granted") startTracking();
     } else if (permission === "granted") {

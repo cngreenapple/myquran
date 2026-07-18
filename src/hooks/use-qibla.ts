@@ -21,7 +21,7 @@ interface UseQiblaReturn {
 }
 
 const ALIGN_TOLERANCE = 5; // degrees
-const SIGNAL_TIMEOUT_MS = 3000; // 3 detik timeout deteksi sensor
+const SIGNAL_TIMEOUT_MS = 10000; // 10 detik timeout deteksi sensor (sensor kadang lambat)
 
 export function useQibla(location: Location | null): UseQiblaReturn {
   const [deviceHeading, setDeviceHeading] = useState<number | null>(null);
@@ -30,8 +30,12 @@ export function useQibla(location: Location | null): UseQiblaReturn {
   const [hasSignal, setHasSignal] = useState(false);
   const [isWaitingForSignal, setIsWaitingForSignal] = useState(false);
 
+ // Counter untuk logging — berapa banyak event orientation diterima
+  const eventCountRef = useRef(0);
+
   // Ref untuk handler orientation — stabil, tidak pernah berubah referensinya
   const handleOrientationRef = useRef<(e: DeviceOrientationEvent) => void>((e: DeviceOrientationEvent) => {
+    eventCountRef.current++;
     const orient: DeviceOrientationEvent = e;
     const heading = normalizeDeviceHeading({
       alpha: orient.alpha,
@@ -41,9 +45,14 @@ export function useQibla(location: Location | null): UseQiblaReturn {
     if (heading !== null) {
       setDeviceHeading(heading);
       setHasSignal(true);
+    } else if (eventCountRef.current <= 5) {
+      // Log 5 event pertama yang gagal di-normalize untuk debugging
+      console.log("[Qibla] Orientation event ignored:", {
+        alpha: orient.alpha,
+        webkitCompassHeading: (orient as unknown as { webkitCompassHeading?: number }).webkitCompassHeading,
+      });
     }
   });
-  // Ref ini tidak perlu di-update — handler selalu pakai function yang sama
 
   // Compute qibla info
   const qibla = location
@@ -97,8 +106,24 @@ export function useQibla(location: Location | null): UseQiblaReturn {
     return "granted";
   }, []);
 
+  // Cek HTTPS saat mount
+  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+
   const startTracking = useCallback(() => {
     if (isTracking) return;
+
+    console.log("[Qibla] Starting tracking...", {
+      protocol: window.location.protocol,
+      isHttps,
+      permission,
+    });
+
+    if (!isHttps && typeof window !== "undefined") {
+      console.warn("[Qibla] WARNING: Orientation sensor may not work over HTTP!");
+    }
+
+    // Reset counter
+    eventCountRef.current = 0;
 
     const handler = handleOrientationRef.current;
     window.addEventListener("deviceorientation", handler, true);
@@ -109,15 +134,14 @@ export function useQibla(location: Location | null): UseQiblaReturn {
     setIsWaitingForSignal(true);
     setIsTracking(true);
 
-    // Timeout: kalau 3 detik tidak ada signal, beri tahu user
+    // Timeout: kalau SIGNAL_TIMEOUT_MS tidak ada signal, beri tahu user
     const timeoutId = setTimeout(() => {
       setIsWaitingForSignal(false);
       // Kalau masih belum ada signal, set hasSignal = false (tetap)
     }, SIGNAL_TIMEOUT_MS);
 
-    // Simpan timeoutId untuk cleanup
     (window as any).__qiblaTimeoutId = timeoutId;
-  }, [isTracking]);
+  }, [isTracking, isHttps, permission]);
 
   const stopTracking = useCallback(() => {
     if (!isTracking) return;
